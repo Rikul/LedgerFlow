@@ -82,13 +82,53 @@ class NotificationSettings(Base):
     phone_number = Column(String(50), nullable=True)
 
 
+
+class Customer(Base):
+    __tablename__ = 'customers'
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False)
+    phone = Column(String(50), nullable=True)
+    company = Column(String(255), nullable=True)
+    street = Column(String(255), nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(100), nullable=True)
+    zip_code = Column(String(50), nullable=True)
+    country = Column(String(100), nullable=True)
+    billing_street = Column(String(255), nullable=True)
+    billing_city = Column(String(100), nullable=True)
+    billing_state = Column(String(100), nullable=True)
+    billing_zip_code = Column(String(50), nullable=True)
+    billing_country = Column(String(100), nullable=True)
+    tax_id = Column(String(100), nullable=True)
+    payment_terms = Column(String(50), nullable=False, default='net30')
+    credit_limit = Column(Float, nullable=True)
+    notes = Column(String(500), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(String(50), nullable=True)
+
+class Vendor(Base):
+    __tablename__ = 'vendors'
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=True)
+    phone = Column(String(50), nullable=True)
+    company = Column(String(255), nullable=True)
+    street = Column(String(255), nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(100), nullable=True)
+    zip_code = Column(String(50), nullable=True)
+    country = Column(String(100), nullable=True)
+    tax_id = Column(String(100), nullable=True)
+    notes = Column(String(500), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(String(50), nullable=True)
+
 class SecuritySettings(Base):
     __tablename__ = 'security_settings'
     id = Column(Integer, primary_key=True, index=True)
-    
     # Password (hashed)
     password_hash = Column(String(255), nullable=True)
-    
     # Two-factor authentication
     enable2fa = Column(Boolean, default=False)
     two_factor_method = Column(String(10), default='email')  # 'email' or 'sms'

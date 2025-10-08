@@ -35,7 +35,7 @@ interface Vendor {
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Vendors</h1>
         <button 
-          class="btn-primary"
+          class="btn-primary  flex items-center"
           (click)="showCreateForm = true"
           *ngIf="!showCreateForm">
           <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -159,7 +159,7 @@ interface Vendor {
       </div>
 
       <!-- Vendors List -->
-      <div class="card">
+      <div class="card" *ngIf="!showCreateForm">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-medium text-gray-900">Vendor List</h2>
           <div class="flex space-x-2">
