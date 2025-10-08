@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface PasswordChangePayload {
@@ -67,5 +67,50 @@ export class SecurityService {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  async login(password: string): Promise<true | 'setup' | false> {
+    // Check if password exists in DB
+    const settings: any = await this.getSecuritySettings().toPromise();
+    if (!settings || typeof settings.hasPassword === 'undefined' || !settings.hasPassword) {
+      return 'setup';
+    }
+    // Validate password with backend
+    try {
+      const result = await this.http.post<any>(`${this.baseUrl}/login`, { password }).toPromise();
+      if (result && result.token) {
+        localStorage.setItem('jwtToken', result.token);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  async setInitialPassword(newPassword: string): Promise<any> {
+    // Set initial password in backend
+    const result = await this.http.post<any>(`${this.baseUrl}/set-password`, { password: newPassword }).toPromise();
+    return result;
+  }
+
+  logout() {
+    localStorage.removeItem('jwtToken');
+  }
+
+  getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('jwtToken');
+    return token ? new HttpHeaders({ 'Authorization': `Bearer ${token}` }) : new HttpHeaders();
+  }
+
+  async verifyToken(): Promise<boolean> {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) return false;
+    try {
+      const result = await this.http.post<any>(`${this.baseUrl}/verify-token`, { token }).toPromise();
+      return result && result.valid;
+    } catch {
+      return false;
+    }
   }
 }

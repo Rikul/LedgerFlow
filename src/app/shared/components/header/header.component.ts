@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { SecurityService } from '../../../features/settings/security/security.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -43,10 +45,10 @@ import { CommonModule } from '@angular/common';
             </button>
             
             <!-- Logout -->
-            <button class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg">
+            <button (click)="logout()" class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg" title="Logout">
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+              </svg>
             </button>
 
           </div>
@@ -56,4 +58,10 @@ import { CommonModule } from '@angular/common';
   `,
   styles: []
 })
-export class HeaderComponent {}
+export class HeaderComponent {
+  constructor(private router: Router, private securityService: SecurityService) {}
+  logout() {
+    this.securityService.logout();
+    this.router.navigate(['/login']);
+  }
+}

@@ -1,9 +1,17 @@
 from flask import Flask, jsonify, request
+import jwt
+import datetime
 from flask_cors import CORS
 from flask_migrate import Migrate
 import bcrypt
 from models import Base, SessionLocal, engine, Company, TaxSettings, NotificationSettings, SecuritySettings, DATABASE_URL
 
+
+# Replace this with .env in production
+# load_dotenv()  # Load from .env file
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+
+SECRET_KEY = 'PPkGPmyTkmBY18J65ZYU_RQHhd-8N18ITFOiqth7Jqg'
 
 def create_app():
     app = Flask(__name__)
@@ -183,6 +191,7 @@ def create_app():
         db.commit()
         return jsonify({ 'status': 'ok', 'id': settings.id }), 200
 
+
     # Security Settings Routes
     @app.get('/api/security/settings')
     def get_security_settings():
@@ -190,10 +199,10 @@ def create_app():
         settings = db.query(SecuritySettings).first()
         if not settings:
             return jsonify(None), 200
-        
         return jsonify({
             'enable2fa': settings.enable_2fa,
-            'twoFactorMethod': settings.two_factor_method
+            'twoFactorMethod': settings.two_factor_method,
+            'hasPassword': bool(settings.password_hash)
         }), 200
 
     @app.post('/api/security/settings')
@@ -204,10 +213,8 @@ def create_app():
         if not settings:
             settings = SecuritySettings()
             db.add(settings)
-
         settings.enable_2fa = data.get('enable2fa', False)
         settings.two_factor_method = data.get('twoFactorMethod', 'email')
-
         db.commit()
         return jsonify({ 'status': 'ok', 'id': settings.id }), 200
 
@@ -215,30 +222,75 @@ def create_app():
     def change_password():
         db = SessionLocal()
         data = request.get_json(force=True) or {}
-        
         current_password = data.get('currentPassword', '')
         new_password = data.get('newPassword', '')
-        
         if not current_password or not new_password:
             return jsonify({ 'error': 'Current password and new password are required' }), 400
-        
         settings = db.query(SecuritySettings).first()
         if not settings:
             settings = SecuritySettings()
             db.add(settings)
-        
         # If there's an existing password, verify current password
         if settings.password_hash:
             if not bcrypt.checkpw(current_password.encode('utf-8'), settings.password_hash.encode('utf-8')):
                 return jsonify({ 'error': 'Current password is incorrect' }), 400
-        
         # Hash new password
         salt = bcrypt.gensalt()
         hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), salt)
         settings.password_hash = hashed_password.decode('utf-8')
-        
         db.commit()
         return jsonify({ 'status': 'ok', 'message': 'Password updated successfully' }), 200
+
+    # JWT Login Endpoint
+    @app.post('/api/security/login')
+    def login():
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        password = data.get('password', '')
+        settings = db.query(SecuritySettings).first()
+        if not settings or not settings.password_hash:
+            return jsonify({ 'error': 'No password set' }), 403
+        if not bcrypt.checkpw(password.encode('utf-8'), settings.password_hash.encode('utf-8')):
+            return jsonify({ 'error': 'Invalid password' }), 401
+        payload = {
+            'user': 'admin',
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+        return jsonify({ 'token': token }), 200
+
+    # Initial Password Setup Endpoint
+    @app.post('/api/security/set-password')
+    def set_initial_password():
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        password = data.get('password', '')
+        if not password:
+            return jsonify({ 'error': 'Password required' }), 400
+        settings = db.query(SecuritySettings).first()
+        if not settings:
+            settings = SecuritySettings()
+            db.add(settings)
+        if settings.password_hash:
+            return jsonify({ 'error': 'Password already set' }), 400
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+        settings.password_hash = hashed_password.decode('utf-8')
+        db.commit()
+        return jsonify({ 'status': 'ok' }), 200
+
+    # JWT Token Verification Endpoint
+    @app.post('/api/security/verify-token')
+    def verify_token():
+        data = request.get_json(force=True) or {}
+        token = data.get('token', '')
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            return jsonify({ 'valid': True, 'user': payload.get('user') }), 200
+        except jwt.ExpiredSignatureError:
+            return jsonify({ 'valid': False, 'error': 'Token expired' }), 401
+        except jwt.InvalidTokenError:
+            return jsonify({ 'valid': False, 'error': 'Invalid token' }), 401
 
     return app
 
