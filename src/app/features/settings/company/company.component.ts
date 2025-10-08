@@ -1,6 +1,7 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { CompanyService } from './company.service';
 
 @Component({
   selector: 'app-settings-company',
@@ -94,11 +95,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
     </form>
   `,
 })
-export class CompanyComponent implements OnDestroy {
+export class CompanyComponent implements OnDestroy, OnInit {
   form: FormGroup;
   private sub?: any;
-
-  constructor() {
+  
+  constructor(private companyService: CompanyService) {
     const fb = new FormBuilder();
     this.form = fb.group({
       companyName: [''],
@@ -130,9 +131,27 @@ export class CompanyComponent implements OnDestroy {
     });
   }
 
+  ngOnInit(): void {
+    this.companyService.getCompany().subscribe((data) => {
+      if (!data) return;
+      this.form.patchValue({
+        companyName: data.name ?? data.companyName ?? '',
+        mailing: data.mailing ?? {},
+        physical: data.physical ?? {},
+      });
+    });
+  }
+
   onSubmit() {
-    // Placeholder action: replace with service call later
-    console.log('Company settings saved', this.form.getRawValue());
+    const payload = this.form.getRawValue();
+    this.companyService.upsertCompany({
+      companyName: payload.companyName,
+      mailing: payload.mailing,
+      physical: payload.physical,
+    }).subscribe(() => {
+      // success toast placeholder
+      console.log('Company settings saved');
+    });
   }
 
   ngOnDestroy(): void {

@@ -64,7 +64,8 @@
               "buildTarget": "ledgerflow:build:production"
             },
             "development": {
-              "buildTarget": "ledgerflow:build:development"
+              "buildTarget": "ledgerflow:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
