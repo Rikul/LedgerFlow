@@ -90,5 +90,5 @@ class SecuritySettings(Base):
     password_hash = Column(String(255), nullable=True)
     
     # Two-factor authentication
-    enable_2fa = Column(Boolean, default=False)
+    enable2fa = Column(Boolean, default=False)
     two_factor_method = Column(String(10), default='email')  # 'email' or 'sms'

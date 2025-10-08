@@ -200,7 +200,7 @@ def create_app():
         if not settings:
             return jsonify(None), 200
         return jsonify({
-            'enable2fa': settings.enable_2fa,
+            'enable2fa': settings.enable2fa,
             'twoFactorMethod': settings.two_factor_method,
             'hasPassword': bool(settings.password_hash)
         }), 200
@@ -213,7 +213,7 @@ def create_app():
         if not settings:
             settings = SecuritySettings()
             db.add(settings)
-        settings.enable_2fa = data.get('enable2fa', False)
+        settings.enable2fa = data.get('enable2fa', False)
         settings.two_factor_method = data.get('twoFactorMethod', 'email')
         db.commit()
         return jsonify({ 'status': 'ok', 'id': settings.id }), 200
