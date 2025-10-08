@@ -1,0 +1,41 @@
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+  },
+  {
+    path: 'invoices',
+    loadChildren: () => import('./features/invoicing/invoicing.routes').then(m => m.invoicingRoutes)
+  },
+  {
+    path: 'expenses',
+    loadChildren: () => import('./features/expenses/expenses.routes').then(m => m.expensesRoutes)
+  },
+  {
+    path: 'bank-reconciliation',
+    loadComponent: () => import('./features/bank-reconciliation/bank-reconciliation.component').then(m => m.BankReconciliationComponent)
+  },
+  {
+    path: 'reports',
+    loadChildren: () => import('./features/reports/reports.routes').then(m => m.reportsRoutes)
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent)
+  },
+  {
+    path: 'users',
+    loadComponent: () => import('./features/user-management/user-management.component').then(m => m.UserManagementComponent)
+  },
+  {
+    path: '**',
+    redirectTo: '/dashboard'
+  }
+];
