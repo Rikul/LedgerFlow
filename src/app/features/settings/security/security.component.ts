@@ -43,7 +43,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
           <div class="md:col-span-2">
             <label class="form-label" for="twoFactorMethod">Method</label>
             <select id="twoFactorMethod" class="form-input" formControlName="twoFactorMethod">
-              <option value="authenticator">Authenticator App</option>
               <option value="sms">SMS</option>
               <option value="email">Email</option>
             </select>

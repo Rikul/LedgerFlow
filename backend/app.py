@@ -69,6 +69,19 @@ class TaxSettings(Base):
     tax_rate_5_compound = Column(Boolean, default=False)
 
 
+class NotificationSettings(Base):
+    __tablename__ = 'notification_settings'
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Email notifications
+    enable_email = Column(Boolean, default=False)
+    email_address = Column(String(255), nullable=True)
+    
+    # SMS notifications
+    enable_sms = Column(Boolean, default=False)
+    phone_number = Column(String(50), nullable=True)
+
+
 def create_app():
     app = Flask(__name__)
     CORS(app)
@@ -210,6 +223,38 @@ def create_app():
             setattr(settings, f'tax_rate_{i}_name', rate.get('name'))
             setattr(settings, f'tax_rate_{i}_rate', rate.get('rate'))
             setattr(settings, f'tax_rate_{i}_compound', rate.get('compound', False))
+
+        db.commit()
+        return jsonify({ 'status': 'ok', 'id': settings.id }), 200
+
+    # Notification Settings Routes
+    @app.get('/api/notification-settings')
+    def get_notification_settings():
+        db = SessionLocal()
+        settings = db.query(NotificationSettings).first()
+        if not settings:
+            return jsonify(None), 200
+        
+        return jsonify({
+            'enableEmail': settings.enable_email,
+            'emailAddress': settings.email_address,
+            'enableSms': settings.enable_sms,
+            'phoneNumber': settings.phone_number
+        }), 200
+
+    @app.post('/api/notification-settings')
+    def upsert_notification_settings():
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        settings = db.query(NotificationSettings).first()
+        if not settings:
+            settings = NotificationSettings()
+            db.add(settings)
+
+        settings.enable_email = data.get('enableEmail', False)
+        settings.email_address = data.get('emailAddress')
+        settings.enable_sms = data.get('enableSms', False)
+        settings.phone_number = data.get('phoneNumber')
 
         db.commit()
         return jsonify({ 'status': 'ok', 'id': settings.id }), 200

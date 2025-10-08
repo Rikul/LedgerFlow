@@ -1,6 +1,7 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NotificationSettingsService } from './notifications.service';
 
 @Component({
   selector: 'app-settings-notifications',
@@ -22,21 +23,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
             <label class="form-label" for="emailAddress">Email Address</label>
             <input id="emailAddress" type="email" class="form-input" formControlName="emailAddress" [disabled]="!form.get('enableEmail')?.value" placeholder="you@example.com" />
           </div>
-        </div>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4" formGroupName="emailPrefs">
-          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" class="h-4 w-4" formControlName="invoices" [disabled]="!form.get('enableEmail')?.value" />
-            Invoices
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" class="h-4 w-4" formControlName="payments" [disabled]="!form.get('enableEmail')?.value" />
-            Payments
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" class="h-4 w-4" formControlName="reports" [disabled]="!form.get('enableEmail')?.value" />
-            Reports
-          </label>
-        </div>
+        </div>  
       </div>
 
       <!-- SMS Notifications -->
@@ -54,58 +41,87 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
             <input id="phoneNumber" type="tel" class="form-input" formControlName="phoneNumber" [disabled]="!form.get('enableSms')?.value" placeholder="+1 555-555-5555" />
           </div>
         </div>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4" formGroupName="smsPrefs">
-          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" class="h-4 w-4" formControlName="invoices" [disabled]="!form.get('enableSms')?.value" />
-            Invoices
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" class="h-4 w-4" formControlName="payments" [disabled]="!form.get('enableSms')?.value" />
-            Payments
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" class="h-4 w-4" formControlName="alerts" [disabled]="!form.get('enableSms')?.value" />
-            Alerts
-          </label>
-        </div>
       </div>
 
       <div class="flex justify-end">
-        <button type="submit" class="btn-primary">Save Changes</button>
+        <button type="submit" class="btn-primary" [disabled]="form.invalid || saving">
+          {{ saving ? 'Saving...' : 'Save Changes' }}
+        </button>
       </div>
     </form>
+
+    @if (errorMessage) {
+      <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div class="text-sm text-red-600">{{ errorMessage }}</div>
+      </div>
+    }
+
+    @if (successMessage) {
+      <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+        <div class="text-sm text-green-600">{{ successMessage }}</div>
+      </div>
+    }
   `,
 })
-export class NotificationsComponent implements OnDestroy {
+export class NotificationsComponent implements OnInit, OnDestroy {
   form: FormGroup;
+  saving = false;
+  errorMessage = '';
+  successMessage = '';
   private sub?: any;
 
-  constructor() {
-    const fb = new FormBuilder();
-    this.form = fb.group({
-      enableEmail: [true],
-      emailAddress: [''],
-      emailPrefs: fb.group({
-        invoices: [true],
-        payments: [true],
-        reports: [false],
-      }),
+  constructor(
+    private fb: FormBuilder,
+    private notificationService: NotificationSettingsService
+  ) {
+    this.form = this.fb.group({
+      enableEmail: [false],
+      emailAddress: ['', [Validators.email]],
       enableSms: [false],
       phoneNumber: [''],
-      smsPrefs: fb.group({
-        invoices: [false],
-        payments: [true],
-        alerts: [true],
-      }),
     });
 
     this.sub = this.form.valueChanges.subscribe(() => {
-      // Placeholder hook for live validation or normalization
+      this.clearMessages();
     });
   }
 
-  onSubmit() {
-    console.log('Notification settings saved', this.form.getRawValue());
+  ngOnInit() {
+    this.loadSettings();
+  }
+
+  async loadSettings() {
+    try {
+      const settings = await this.notificationService.getNotificationSettings().toPromise();
+      if (settings) {
+        this.form.patchValue(settings);
+      }
+    } catch (error) {
+      this.errorMessage = 'Failed to load notification settings';
+      console.error('Error loading notification settings:', error);
+    }
+  }
+
+  async onSubmit() {
+    if (this.form.invalid) return;
+
+    this.saving = true;
+    this.clearMessages();
+
+    try {
+      await this.notificationService.upsertNotificationSettings(this.form.getRawValue()).toPromise();
+      this.successMessage = 'Notification settings saved successfully';
+    } catch (error) {
+      this.errorMessage = 'Failed to save notification settings';
+      console.error('Error saving notification settings:', error);
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  private clearMessages() {
+    this.errorMessage = '';
+    this.successMessage = '';
   }
 
   ngOnDestroy(): void {
