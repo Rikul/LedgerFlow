@@ -20,7 +20,6 @@ import { CompanyService } from './company.service';
         
         <!-- Company Information -->
         <div class="bg-white shadow rounded-lg p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Company Information</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="md:col-span-2 lg:col-span-3">
               <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">
