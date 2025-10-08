@@ -19,6 +19,14 @@ export const routes: Routes = [
     loadChildren: () => import('./features/expenses/expenses.routes').then(m => m.expensesRoutes)
   },
   {
+    path: 'customers',
+    loadComponent: () => import('./features/customers/customers.component').then(m => m.CustomersComponent)
+  },
+  {
+    path: 'vendors',
+    loadComponent: () => import('./features/vendors/vendors.component').then(m => m.VendorsComponent)
+  },
+  {
     path: 'bank-reconciliation',
     loadComponent: () => import('./features/bank-reconciliation/bank-reconciliation.component').then(m => m.BankReconciliationComponent)
   },
@@ -35,10 +43,6 @@ export const routes: Routes = [
         loadChildren: () => import('./features/settings/settings.routes').then(m => m.settingsRoutes)
       }
     ]
-  },
-  {
-    path: 'users',
-    loadComponent: () => import('./features/user-management/user-management.component').then(m => m.UserManagementComponent)
   },
   {
     path: '**',
