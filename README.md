@@ -1,6 +1,6 @@
 # LedgerFlow - Accounting Software
 
-LedgerFlow is a comprehensive online accounting software designed specifically for small businesses and freelancers. Built with Angular and Tailwind CSS, it provides an intuitive and modern interface for managing finances, invoicing, expense tracking, and more.
+LedgerFlow is a comprehensive online accounting software designed specifically for small businesses and freelancers. Built with Angular and Tailwind CSS, it provides an intuitive and modern interface for managing finances, invoicing, expense tracking, customer/vendor management, and more.
 
 ## Features
 
@@ -10,8 +10,9 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
 - **Expense Tracking** - Record and categorize business expenses
 - **Bank Reconciliation** - Match bank transactions with accounting records
 - **Reporting** - Generate Profit & Loss, Balance Sheet, and Cash Flow reports
-- **User Management** - Role-based access control for team members
-- **Settings** - Customize application preferences and company settings
+- **Customers** - Manage customer records, contacts, payment terms, and credit limits
+- **Vendors** - Manage vendor records, categories, payment terms, and account numbers
+- **Settings** - Customize application preferences, company info, tax, notifications, and security
 
 ### 🎨 UI/UX Features
 - Clean and intuitive interface
@@ -28,12 +29,13 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
 - **Typography**: Inter font family
 - **Build Tool**: Angular CLI
 - **Module System**: ES2022 with lazy loading
+- **Backend**: Flask (Python), SQLite
 
 ## Key Components
 
 ### Layout Components
 - **Header**: Top navigation with search, notifications, and user menu
-- **Sidebar**: Main navigation with feature links and role-based access
+- **Sidebar**: Main navigation with feature links (Dashboard, Invoices, Expenses, Customers, Vendors, etc.)
 - **App Component**: Main layout wrapper with responsive design
 
 ### Feature Components
@@ -42,8 +44,14 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
 - **Invoice Create**: Comprehensive invoice creation form with line items
 - **Invoice View**: Professional invoice preview with payment tracking
 - **Expense List**: Expense tracking with categories and receipt management
+- **Customer List**: Manage customers, search/filter, add/edit/delete
+- **Vendor List**: Manage vendors, search/filter, add/edit/delete
 - **Settings**: Application configuration and preferences
-- **User Management**: Team member and permission management
+  - **Company**: Company info, addresses, contact
+  - **Tax Settings**: Entity type, tax rates
+  - **Notifications**: Email/SMS notification preferences
+  - **Security**: Password management, 2FA
+
 
 ## Getting Started
 
@@ -51,27 +59,31 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
 - Node.js 18+ 
 - npm or yarn
 - Angular CLI
+- Python 3.12+
+- pip
 
 ### Installation
 
-1. **Install dependencies**:
+1. **Install frontend dependencies**:
    ```bash
    npm install
    ```
-
-2. **Install Angular CLI** (if not already installed):
+2. **Install backend dependencies**:
    ```bash
-   npm install -g @angular/cli
+   pip install -r backend/requirements.txt
    ```
-
-3. **Start development server**:
+3. **Start backend server**:
+   ```bash
+   cd backend
+   python app.py
+   ```
+4. **Start frontend development server**:
    ```bash
    npm start
    # or
    ng serve
    ```
-
-4. **Open browser** and navigate to `http://localhost:4200`
+5. **Open browser** and navigate to `http://localhost:4200`
 
 ### Build for Production
 
@@ -100,6 +112,7 @@ ng build --configuration production
 - Shared components in `/shared` directory
 - Lazy-loaded routes for better performance
 - Clear separation of concerns
+- Backend models in `/backend/models.py`
 
 ## Future Enhancements
 
