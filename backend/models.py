@@ -11,7 +11,7 @@ SessionLocal = scoped_session(sessionmaker(bind=engine, autocommit=False, autofl
 Base = declarative_base()
 
 # Export for use in other modules
-__all__ = ['Base', 'SessionLocal', 'engine', 'DATABASE_URL', 'Company', 'TaxSettings', 'NotificationSettings', 'SecuritySettings']
+__all__ = ['Base', 'SessionLocal', 'engine', 'DATABASE_URL', 'Company', 'TaxSettings', 'NotificationSettings', 'SecuritySettings', 'Customer', 'Vendor']
 
 
 class Company(Base):
@@ -120,6 +120,9 @@ class Vendor(Base):
     zip_code = Column(String(50), nullable=True)
     country = Column(String(100), nullable=True)
     tax_id = Column(String(100), nullable=True)
+    payment_terms = Column(String(50), nullable=False, default='net30')
+    category = Column(String(50), nullable=False, default='other')
+    account_number = Column(String(100), nullable=True)
     notes = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(String(50), nullable=True)

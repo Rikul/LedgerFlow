@@ -4,7 +4,7 @@ import datetime
 from flask_cors import CORS
 from flask_migrate import Migrate
 import bcrypt
-from models import Base, SessionLocal, engine, Company, TaxSettings, NotificationSettings, SecuritySettings, Customer, DATABASE_URL
+from models import Base, SessionLocal, engine, Company, TaxSettings, NotificationSettings, SecuritySettings, Customer, Vendor, DATABASE_URL
 
 
 # Replace this with .env in production
@@ -145,6 +145,105 @@ def create_app():
         if not customer:
             return jsonify({'error': 'Customer not found'}), 404
         db.delete(customer)
+        db.commit()
+        return jsonify({'status': 'ok'}), 200
+
+    # Vendor CRUD Endpoints
+    @app.get('/api/vendors')
+    def get_vendors():
+        db = SessionLocal()
+        vendors = db.query(Vendor).all()
+        result = []
+        for v in vendors:
+            result.append({
+                'id': v.id,
+                'name': v.name,
+                'email': v.email,
+                'phone': v.phone,
+                'company': v.company,
+                'address': {
+                    'street': v.street,
+                    'city': v.city,
+                    'state': v.state,
+                    'zipCode': v.zip_code,
+                    'country': v.country,
+                },
+                'taxId': v.tax_id,
+                'paymentTerms': v.payment_terms,
+                'category': v.category,
+                'accountNumber': v.account_number,
+                'notes': v.notes,
+                'isActive': v.is_active,
+                'createdAt': v.created_at
+            })
+        return jsonify(result), 200
+
+    @app.post('/api/vendors')
+    def create_vendor():
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        if not name or not email:
+            return jsonify({'error': 'Name and email are required'}), 400
+        vendor = Vendor(
+            name=name,
+            email=email,
+            phone=data.get('phone'),
+            company=data.get('company'),
+            street=data.get('address', {}).get('street'),
+            city=data.get('address', {}).get('city'),
+            state=data.get('address', {}).get('state'),
+            zip_code=data.get('address', {}).get('zipCode'),
+            country=data.get('address', {}).get('country'),
+            tax_id=data.get('taxId'),
+            payment_terms=data.get('paymentTerms', 'net30'),
+            category=data.get('category', 'other'),
+            account_number=data.get('accountNumber'),
+            notes=data.get('notes'),
+            is_active=data.get('isActive', True),
+            created_at=datetime.datetime.utcnow().isoformat()
+        )
+        db.add(vendor)
+        db.commit()
+        return jsonify({'status': 'ok', 'id': vendor.id}), 201
+
+    @app.put('/api/vendors/<int:vendor_id>')
+    def update_vendor(vendor_id):
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+        if not vendor:
+            return jsonify({'error': 'Vendor not found'}), 404
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        if not name or not email:
+            return jsonify({'error': 'Name and email are required'}), 400
+        vendor.name = name
+        vendor.email = email
+        vendor.phone = data.get('phone')
+        vendor.company = data.get('company')
+        vendor.street = data.get('address', {}).get('street')
+        vendor.city = data.get('address', {}).get('city')
+        vendor.state = data.get('address', {}).get('state')
+        vendor.zip_code = data.get('address', {}).get('zipCode')
+        vendor.country = data.get('address', {}).get('country')
+        vendor.tax_id = data.get('taxId')
+        vendor.payment_terms = data.get('paymentTerms', 'net30')
+        vendor.category = data.get('category', 'other')
+        vendor.account_number = data.get('accountNumber')
+        vendor.notes = data.get('notes')
+        vendor.is_active = data.get('isActive', True)
+        db.commit()
+        return jsonify({'status': 'ok', 'id': vendor.id}), 200
+
+    @app.delete('/api/vendors/<int:vendor_id>')
+    def delete_vendor(vendor_id):
+        db = SessionLocal()
+        vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
+        if not vendor:
+            return jsonify({'error': 'Vendor not found'}), 404
+        db.delete(vendor)
         db.commit()
         return jsonify({'status': 'ok'}), 200
     

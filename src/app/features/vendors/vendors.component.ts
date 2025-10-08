@@ -3,33 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-
-interface Vendor {
-  id?: number;
-  name: string;
-  email: string;
-  phone: string;
-  company?: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  taxId?: string;
-  paymentTerms: string;
-  accountNumber?: string;
-  category: string;
-  notes?: string;
-  isActive: boolean;
-  createdAt?: Date;
-}
+import { VendorService, Vendor } from './vendor.service';
+import { VendorViewComponent } from './vendor-view.component';
 
 @Component({
   selector: 'app-vendors',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, VendorViewComponent],
   template: `
     <div class="p-6">
       <div class="flex justify-between items-center mb-6">
@@ -47,6 +27,7 @@ interface Vendor {
 
       <!-- Create/Edit Vendor Form -->
       <div class="card mb-6" *ngIf="showCreateForm">
+        <button class="btn-outline mb-4" (click)="backToList()">Back to the list</button>
         <h2 class="text-lg font-medium text-gray-900 mb-4">
           {{ editingVendor ? 'Edit Vendor' : 'Add New Vendor' }}
         </h2>
@@ -158,8 +139,11 @@ interface Vendor {
         </form>
       </div>
 
+      <!-- Vendor View -->
+      <app-vendor-view *ngIf="viewingVendor" [vendor]="viewingVendor" (back)="backToList()"></app-vendor-view>
+
       <!-- Vendors List -->
-      <div class="card" *ngIf="!showCreateForm">
+      <div class="card" *ngIf="!showCreateForm && !viewingVendor">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-medium text-gray-900">Vendor List</h2>
           <div class="flex space-x-2">
@@ -202,7 +186,7 @@ interface Vendor {
               <tr *ngFor="let vendor of filteredVendors">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div class="text-sm font-medium text-gray-900">{{ vendor.name }}</div>
+                    <div class="text-sm font-medium text-gray-900 cursor-pointer hover:underline" (click)="viewVendor(vendor)">{{ vendor.name }}</div>
                     <div class="text-sm text-gray-500" *ngIf="vendor.company">{{ vendor.company }}</div>
                   </div>
                 </td>
@@ -246,9 +230,10 @@ export class VendorsComponent implements OnInit {
   selectedCategory = '';
   showCreateForm = false;
   editingVendor: Vendor | null = null;
+  viewingVendor: Vendor | null = null;
   saving = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private vendorService: VendorService) {
     this.vendorForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -275,46 +260,10 @@ export class VendorsComponent implements OnInit {
   }
 
   loadVendors() {
-    // TODO: Load from API
-    this.vendors = [
-      {
-        id: 1,
-        name: 'Office Depot',
-        company: 'Office Depot Inc.',
-        email: 'accounts@officedepot.com',
-        phone: '+1 800-463-3768',
-        address: {
-          street: '6600 N Military Trail',
-          city: 'Boca Raton',
-          state: 'FL',
-          zipCode: '33496',
-          country: 'USA'
-        },
-        category: 'office_supplies',
-        paymentTerms: 'net30',
-        isActive: true,
-        createdAt: new Date()
-      },
-      {
-        id: 2,
-        name: 'AWS',
-        company: 'Amazon Web Services',
-        email: 'billing@aws.amazon.com',
-        phone: '+1 206-266-4064',
-        address: {
-          street: '410 Terry Ave N',
-          city: 'Seattle',
-          state: 'WA',
-          zipCode: '98109',
-          country: 'USA'
-        },
-        category: 'technology',
-        paymentTerms: 'due_on_receipt',
-        isActive: true,
-        createdAt: new Date()
-      }
-    ];
-    this.filteredVendors = [...this.vendors];
+    this.vendorService.getVendors().subscribe(vendors => {
+      this.vendors = vendors;
+      this.filterVendors();
+    });
   }
 
   filterVendors() {
@@ -352,43 +301,48 @@ export class VendorsComponent implements OnInit {
 
   editVendor(vendor: Vendor) {
     this.editingVendor = vendor;
-    this.vendorForm.patchValue(vendor);
+    this.vendorForm.patchValue({
+      ...vendor,
+      address: vendor.address || {}
+    });
     this.showCreateForm = true;
+    this.viewingVendor = null;
+  }
+
+  viewVendor(vendor: Vendor) {
+    this.viewingVendor = vendor;
+    this.showCreateForm = false;
+    this.editingVendor = null;
   }
 
   deleteVendor(vendor: Vendor) {
     if (confirm(`Are you sure you want to delete ${vendor.name}?`)) {
-      this.vendors = this.vendors.filter(v => v.id !== vendor.id);
-      this.filterVendors();
+      this.saving = true;
+      this.vendorService.deleteVendor(vendor.id!).subscribe(() => {
+        this.loadVendors();
+        this.saving = false;
+      });
     }
   }
 
   onSubmit() {
     if (this.vendorForm.invalid) return;
-
     this.saving = true;
     const formValue = this.vendorForm.value;
-
-    // TODO: Save to API
-    setTimeout(() => {
-      if (this.editingVendor) {
-        const index = this.vendors.findIndex(v => v.id === this.editingVendor!.id);
-        if (index !== -1) {
-          this.vendors[index] = { ...this.editingVendor, ...formValue };
-        }
-      } else {
-        const newVendor: Vendor = {
-          id: Math.max(0, ...this.vendors.map(v => v.id || 0)) + 1,
-          ...formValue,
-          createdAt: new Date()
-        };
-        this.vendors.push(newVendor);
-      }
-
-      this.filterVendors();
-      this.cancelForm();
-      this.saving = false;
-    }, 1000);
+    if (this.editingVendor) {
+      const updated = { ...formValue, id: this.editingVendor.id };
+      this.vendorService.updateVendor(updated).subscribe(() => {
+        this.loadVendors();
+        this.cancelForm();
+        this.saving = false;
+      });
+    } else {
+      this.vendorService.createVendor(formValue).subscribe(() => {
+        this.loadVendors();
+        this.cancelForm();
+        this.saving = false;
+      });
+    }
   }
 
   cancelForm() {
@@ -400,5 +354,11 @@ export class VendorsComponent implements OnInit {
       isActive: true,
       address: { country: 'USA' }
     });
+  }
+
+  backToList() {
+    this.viewingVendor = null;
+    this.editingVendor = null;
+    this.showCreateForm = false;
   }
 }
