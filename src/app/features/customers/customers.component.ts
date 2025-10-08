@@ -3,39 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
+import { CustomerService, Customer } from './customer.service';
+import { CustomerViewComponent } from './customer-view.component';
 
-interface Customer {
-  id?: number;
-  name: string;
-  email: string;
-  phone: string;
-  company?: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  billingAddress?: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  taxId?: string;
-  paymentTerms: string;
-  creditLimit?: number;
-  notes?: string;
-  isActive: boolean;
-  createdAt?: Date;
-}
 
 @Component({
   selector: 'app-customers',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, CustomerViewComponent],
   template: `
     <div class="p-6">
       <div class="flex justify-between items-center mb-6">
@@ -52,6 +27,7 @@ interface Customer {
 
       <!-- Create/Edit Customer Form -->
       <div class="card mb-6" *ngIf="showCreateForm">
+        <button class="btn-outline mb-4" (click)="backToList()">Back to the list</button>
         <h2 class="text-lg font-medium text-gray-900 mb-4">
           {{ editingCustomer ? 'Edit Customer' : 'Add New Customer' }}
         </h2>
@@ -147,10 +123,12 @@ interface Customer {
         </form>
       </div>
 
+      <!-- Customer View -->
+      <app-customer-view *ngIf="viewingCustomer" [customer]="viewingCustomer" (back)="backToList()"></app-customer-view>
+
       <!-- Customers List -->
-      <div class="card" *ngIf="!showCreateForm">
+      <div class="card" *ngIf="!showCreateForm && !viewingCustomer">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-medium text-gray-900">Customer List</h2>
           <div class="flex space-x-2">
             <input 
               type="text" 
@@ -176,7 +154,7 @@ interface Customer {
               <tr *ngFor="let customer of filteredCustomers">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div class="text-sm font-medium text-gray-900">{{ customer.name }}</div>
+                    <div class="text-sm font-medium text-gray-900 cursor-pointer hover:underline" (click)="viewCustomer(customer)">{{ customer.name }}</div>
                     <div class="text-sm text-gray-500" *ngIf="customer.company">{{ customer.company }}</div>
                   </div>
                 </td>
@@ -216,9 +194,10 @@ export class CustomersComponent implements OnInit {
   searchTerm = '';
   showCreateForm = false;
   editingCustomer: Customer | null = null;
+  viewingCustomer: Customer | null = null;
   saving = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private customerService: CustomerService) {
     this.customerForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -230,6 +209,13 @@ export class CustomersComponent implements OnInit {
         state: [''],
         zipCode: [''],
         country: ['USA'],
+      }),
+      billingAddress: this.fb.group({
+        street: [''],
+        city: [''],
+        state: [''],
+        zipCode: [''],
+        country: [''],
       }),
       taxId: [''],
       paymentTerms: ['net30', Validators.required],
@@ -244,44 +230,10 @@ export class CustomersComponent implements OnInit {
   }
 
   loadCustomers() {
-    // TODO: Load from API
-    this.customers = [
-      {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+1 555-0123',
-        company: 'Acme Inc.',
-        address: {
-          street: '123 Main St',
-          city: 'New York',
-          state: 'NY',
-          zipCode: '10001',
-          country: 'USA'
-        },
-        paymentTerms: 'net30',
-        isActive: true,
-        createdAt: new Date()
-      },
-      {
-        id: 2,
-        name: 'Jane Smith',
-        email: 'jane@company.com',
-        phone: '+1 555-0456',
-        company: 'Tech Solutions LLC',
-        address: {
-          street: '456 Oak Ave',
-          city: 'San Francisco',
-          state: 'CA',
-          zipCode: '94102',
-          country: 'USA'
-        },
-        paymentTerms: 'net15',
-        isActive: true,
-        createdAt: new Date()
-      }
-    ];
-    this.filteredCustomers = [...this.customers];
+    this.customerService.getCustomers().subscribe(customers => {
+      this.customers = customers;
+      this.filterCustomers();
+    });
   }
 
   filterCustomers() {
@@ -299,43 +251,49 @@ export class CustomersComponent implements OnInit {
 
   editCustomer(customer: Customer) {
     this.editingCustomer = customer;
-    this.customerForm.patchValue(customer);
+    this.customerForm.patchValue({
+      ...customer,
+      address: customer.address || {},
+      billingAddress: customer.billingAddress || {}
+    });
     this.showCreateForm = true;
+    this.viewingCustomer = null;
+  }
+
+  viewCustomer(customer: Customer) {
+    this.viewingCustomer = customer;
+    this.showCreateForm = false;
+    this.editingCustomer = null;
   }
 
   deleteCustomer(customer: Customer) {
     if (confirm(`Are you sure you want to delete ${customer.name}?`)) {
-      this.customers = this.customers.filter(c => c.id !== customer.id);
-      this.filterCustomers();
+      this.saving = true;
+      this.customerService.deleteCustomer(customer.id!).subscribe(() => {
+        this.loadCustomers();
+        this.saving = false;
+      });
     }
   }
 
   onSubmit() {
     if (this.customerForm.invalid) return;
-
     this.saving = true;
     const formValue = this.customerForm.value;
-
-    // TODO: Save to API
-    setTimeout(() => {
-      if (this.editingCustomer) {
-        const index = this.customers.findIndex(c => c.id === this.editingCustomer!.id);
-        if (index !== -1) {
-          this.customers[index] = { ...this.editingCustomer, ...formValue };
-        }
-      } else {
-        const newCustomer: Customer = {
-          id: Math.max(0, ...this.customers.map(c => c.id || 0)) + 1,
-          ...formValue,
-          createdAt: new Date()
-        };
-        this.customers.push(newCustomer);
-      }
-
-      this.filterCustomers();
-      this.cancelForm();
-      this.saving = false;
-    }, 1000);
+    if (this.editingCustomer) {
+      const updated = { ...formValue, id: this.editingCustomer.id };
+      this.customerService.updateCustomer(updated).subscribe(() => {
+        this.loadCustomers();
+        this.cancelForm();
+        this.saving = false;
+      });
+    } else {
+      this.customerService.createCustomer(formValue).subscribe(() => {
+        this.loadCustomers();
+        this.cancelForm();
+        this.saving = false;
+      });
+    }
   }
 
   cancelForm() {
@@ -344,7 +302,14 @@ export class CustomersComponent implements OnInit {
     this.customerForm.reset({
       paymentTerms: 'net30',
       isActive: true,
-      address: { country: 'USA' }
+      address: { country: 'USA' },
+      billingAddress: {}
     });
+  }
+
+  backToList() {
+    this.viewingCustomer = null;
+    this.editingCustomer = null;
+    this.showCreateForm = false;
   }
 }
