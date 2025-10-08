@@ -28,7 +28,13 @@ export const routes: Routes = [
   },
   {
     path: 'settings',
-    loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent)
+    loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent),
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./features/settings/settings.routes').then(m => m.settingsRoutes)
+      }
+    ]
   },
   {
     path: 'users',

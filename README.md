@@ -29,35 +29,6 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
 - **Build Tool**: Angular CLI
 - **Module System**: ES2022 with lazy loading
 
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── features/              # Feature modules
-│   │   ├── dashboard/         # Dashboard overview
-│   │   ├── invoicing/         # Invoice management
-│   │   │   ├── invoice-list/  # List all invoices
-│   │   │   ├── invoice-create/# Create/edit invoices
-│   │   │   └── invoice-view/  # View invoice details
-│   │   ├── expenses/          # Expense tracking
-│   │   │   ├── expense-list/  # List all expenses
-│   │   │   └── expense-create/# Add/edit expenses
-│   │   ├── bank-reconciliation/# Bank reconciliation
-│   │   ├── reports/           # Financial reports
-│   │   ├── settings/          # Application settings
-│   │   └── user-management/   # User and role management
-│   ├── shared/                # Shared components
-│   │   └── components/        # Reusable UI components
-│   │       ├── header/        # Application header
-│   │       └── sidebar/       # Navigation sidebar
-│   ├── app.component.ts       # Root component
-│   ├── app.routes.ts          # Application routing
-│   └── app.config.ts          # Application configuration
-├── styles.css                 # Global styles and Tailwind
-└── index.html                 # Main HTML file
-```
-
 ## Key Components
 
 ### Layout Components
@@ -73,22 +44,6 @@ src/
 - **Expense List**: Expense tracking with categories and receipt management
 - **Settings**: Application configuration and preferences
 - **User Management**: Team member and permission management
-
-## Styling System
-
-### Custom CSS Classes
-- **Button Classes**: `.btn-primary`, `.btn-secondary`, `.btn-success`, etc.
-- **Form Classes**: `.input-field` for consistent form inputs
-- **Card Classes**: `.card` for content containers
-- **Status Badges**: `.status-paid`, `.status-pending`, `.status-overdue`
-- **Navigation**: `.sidebar-link` with active states
-
-### Color Palette
-- **Primary**: Blue (#3b82f6) - Main brand color
-- **Success**: Green (#22c55e) - Positive actions
-- **Warning**: Orange (#f59e0b) - Caution states
-- **Danger**: Red (#ef4444) - Error states
-- **Gray**: Various shades for text and backgrounds
 
 ## Getting Started
 
@@ -179,7 +134,3 @@ ng build --configuration production
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support and questions, please open an issue in the GitHub repository or contact the development team.

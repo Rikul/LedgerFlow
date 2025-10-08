@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="space-y-6">
       <!-- Page Header -->
@@ -19,62 +20,30 @@ import { CommonModule } from '@angular/common';
         <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Settings</h3>
           <nav class="space-y-1">
-            <a href="#" class="sidebar-link active">General</a>
-            <a href="#" class="sidebar-link">Company</a>
-            <a href="#" class="sidebar-link">Tax Settings</a>
-            <a href="#" class="sidebar-link">Notifications</a>
-            <a href="#" class="sidebar-link">Security</a>
-            <a href="#" class="sidebar-link">Integrations</a>
+            <a routerLink="/settings/company" routerLinkActive="active" class="settings-link">Company</a>
+            <a routerLink="/settings/tax" routerLinkActive="active" class="settings-link">Tax Settings</a>
+            <a routerLink="/settings/notifications" routerLinkActive="active" class="settings-link">Notifications</a>
+            <a routerLink="/settings/security" routerLinkActive="active" class="settings-link">Security</a>
+            <span class="settings-link opacity-50 pointer-events-none select-none" title="Coming soon">Integrations</span>
           </nav>
         </div>
         
-        <!-- Settings Content -->
+        <!-- Settings Routed Content -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- General Settings -->
-          <div class="card">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">General Settings</h3>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Application Name</label>
-                <input type="text" value="LedgerFlow" class="input-field">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Time Zone</label>
-                <select class="input-field">
-                  <option>UTC-5 (Eastern Time)</option>
-                  <option>UTC-6 (Central Time)</option>
-                  <option>UTC-7 (Mountain Time)</option>
-                  <option>UTC-8 (Pacific Time)</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date Format</label>
-                <select class="input-field">
-                  <option>MM/DD/YYYY</option>
-                  <option>DD/MM/YYYY</option>
-                  <option>YYYY-MM-DD</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                <select class="input-field">
-                  <option>USD - US Dollar</option>
-                  <option>EUR - Euro</option>
-                  <option>GBP - British Pound</option>
-                  <option>CAD - Canadian Dollar</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Save Button -->
-          <div class="flex justify-end">
-            <button class="btn-primary">Save Changes</button>
-          </div>
+          <router-outlet></router-outlet>
         </div>
       </div>
     </div>
   `,
-  styles: []
+  styles: [
+    `
+    .settings-link {
+      @apply block px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200;
+    }
+    .settings-link.active {
+      @apply bg-blue-50 text-blue-700;
+    }
+    `
+  ]
 })
 export class SettingsComponent {}
