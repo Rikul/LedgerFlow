@@ -3,6 +3,7 @@ from flask_cors import CORS
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session
 from flask_migrate import Migrate
+import bcrypt
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -80,6 +81,18 @@ class NotificationSettings(Base):
     # SMS notifications
     enable_sms = Column(Boolean, default=False)
     phone_number = Column(String(50), nullable=True)
+
+
+class SecuritySettings(Base):
+    __tablename__ = 'security_settings'
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Password (hashed)
+    password_hash = Column(String(255), nullable=True)
+    
+    # Two-factor authentication
+    enable_2fa = Column(Boolean, default=False)
+    two_factor_method = Column(String(10), default='email')  # 'email' or 'sms'
 
 
 def create_app():
@@ -258,6 +271,63 @@ def create_app():
 
         db.commit()
         return jsonify({ 'status': 'ok', 'id': settings.id }), 200
+
+    # Security Settings Routes
+    @app.get('/api/security/settings')
+    def get_security_settings():
+        db = SessionLocal()
+        settings = db.query(SecuritySettings).first()
+        if not settings:
+            return jsonify(None), 200
+        
+        return jsonify({
+            'enable2fa': settings.enable_2fa,
+            'twoFactorMethod': settings.two_factor_method
+        }), 200
+
+    @app.post('/api/security/settings')
+    def update_security_settings():
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        settings = db.query(SecuritySettings).first()
+        if not settings:
+            settings = SecuritySettings()
+            db.add(settings)
+
+        settings.enable_2fa = data.get('enable2fa', False)
+        settings.two_factor_method = data.get('twoFactorMethod', 'email')
+
+        db.commit()
+        return jsonify({ 'status': 'ok', 'id': settings.id }), 200
+
+    @app.post('/api/security/change-password')
+    def change_password():
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        
+        current_password = data.get('currentPassword', '')
+        new_password = data.get('newPassword', '')
+        
+        if not current_password or not new_password:
+            return jsonify({ 'error': 'Current password and new password are required' }), 400
+        
+        settings = db.query(SecuritySettings).first()
+        if not settings:
+            settings = SecuritySettings()
+            db.add(settings)
+        
+        # If there's an existing password, verify current password
+        if settings.password_hash:
+            if not bcrypt.checkpw(current_password.encode('utf-8'), settings.password_hash.encode('utf-8')):
+                return jsonify({ 'error': 'Current password is incorrect' }), 400
+        
+        # Hash new password
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), salt)
+        settings.password_hash = hashed_password.decode('utf-8')
+        
+        db.commit()
+        return jsonify({ 'status': 'ok', 'message': 'Password updated successfully' }), 200
 
     return app
 
