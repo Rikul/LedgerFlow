@@ -15,7 +15,7 @@ import { RouterModule } from '@angular/router';
       </div>
       
       <!-- Settings Content -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-2">
         <!-- Settings Navigation -->
         <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Settings</h3>
@@ -29,7 +29,7 @@ import { RouterModule } from '@angular/router';
         </div>
         
         <!-- Settings Routed Content -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-3 space-y-6">
           <router-outlet></router-outlet>
         </div>
       </div>

@@ -8,8 +8,7 @@ import { CompanyService } from './company.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="max-w-4xl mx-auto p-6">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">Company Settings</h2>
+    <div class="w-full p-6">
       
       <!-- Toast Messages -->
       <div *ngIf="showToast" class="mb-4 p-4 rounded-md" 
@@ -22,8 +21,8 @@ import { CompanyService } from './company.service';
         <!-- Company Information -->
         <div class="bg-white shadow rounded-lg p-6">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Company Information</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="md:col-span-2 lg:col-span-3">
               <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">
                 Company Name <span class="text-red-500">*</span>
               </label>
@@ -68,8 +67,8 @@ import { CompanyService } from './company.service';
         <!-- Mailing Address -->
         <div class="bg-white shadow rounded-lg p-6" formGroupName="mailing">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Mailing Address</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="md:col-span-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="md:col-span-2 lg:col-span-3">
               <label for="mailingAddress1" class="block text-sm font-medium text-gray-700 mb-1">
                 Address Line 1 <span class="text-red-500">*</span>
               </label>
@@ -85,7 +84,7 @@ import { CompanyService } from './company.service';
               </div>
             </div>
             
-            <div class="md:col-span-2">
+            <div class="md:col-span-2 lg:col-span-3">
               <label for="mailingAddress2" class="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
               <input
                 id="mailingAddress2"
@@ -175,8 +174,8 @@ import { CompanyService } from './company.service';
             </label>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="md:col-span-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="md:col-span-2 lg:col-span-3">
               <label for="physicalAddress1" class="block text-sm font-medium text-gray-700 mb-1">
                 Address Line 1 <span class="text-red-500">*</span>
               </label>
@@ -193,7 +192,7 @@ import { CompanyService } from './company.service';
               </div>
             </div>
             
-            <div class="md:col-span-2">
+            <div class="md:col-span-2 lg:col-span-3">
               <label for="physicalAddress2" class="block text-sm font-medium text-gray-700 mb-1">Address Line 2</label>
               <input
                 id="physicalAddress2"
