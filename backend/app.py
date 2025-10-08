@@ -29,13 +29,16 @@ class Company(Base):
     physical_state = Column(String(100), nullable=True)
     physical_postal_code = Column(String(50), nullable=True)
     physical_country = Column(String(100), nullable=True)
+    # Add the new fields
+    contact_email = Column(String(255), nullable=True)
+    company_phone = Column(String(50), nullable=True)
 
 
 def create_app():
     app = Flask(__name__)
     CORS(app)
-
-    # Create tables
+    
+    # Create tables (for initial setup only)
     Base.metadata.create_all(bind=engine)
 
     @app.teardown_appcontext
@@ -52,6 +55,8 @@ def create_app():
         return jsonify({
             'id': company.id,
             'name': company.name,
+            'contactEmail': company.contact_email,
+            'companyPhone': company.company_phone,
             'mailing': {
                 'address1': company.mailing_address1,
                 'address2': company.mailing_address2,
@@ -80,6 +85,9 @@ def create_app():
             db.add(company)
 
         company.name = data.get('companyName') or data.get('name') or ''
+        company.contact_email = data.get('contactEmail')
+        company.company_phone = data.get('companyPhone')
+        
         mailing = data.get('mailing') or {}
         physical = data.get('physical') or {}
 

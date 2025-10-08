@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 
 export interface CompanyPayload {
   companyName: string;
+  contactEmail?: string;
+  companyPhone?: string;
   mailing: {
     address1?: string; address2?: string; city?: string; state?: string; postalCode?: string; country?: string;
   };
