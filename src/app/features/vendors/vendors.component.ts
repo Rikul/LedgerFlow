@@ -14,9 +14,9 @@ import { VendorViewComponent } from './vendor-view.component';
     <div class="p-6">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Vendors</h1>
-        <button 
+        <button
           class="btn-primary  flex items-center"
-          (click)="showCreateForm = true"
+          (click)="addNewVendor()"
           *ngIf="!showCreateForm">
           <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -363,5 +363,17 @@ export class VendorsComponent implements OnInit {
     this.viewingVendor = null;
     this.editingVendor = null;
     this.showCreateForm = false;
+  }
+
+  addNewVendor() {
+    this.editingVendor = null;
+    this.viewingVendor = null;
+    this.vendorForm.reset({
+      paymentTerms: 'net30',
+      category: 'other',
+      isActive: true,
+      address: { country: 'USA' }
+    });
+    this.showCreateForm = true;
   }
 }

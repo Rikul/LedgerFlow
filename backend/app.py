@@ -435,27 +435,33 @@ def create_app():
     @app.get('/api/security/settings')
     def get_security_settings():
         db = SessionLocal()
-        settings = db.query(SecuritySettings).first()
-        if not settings:
-            return jsonify(None), 200
-        return jsonify({
-            'enable2fa': settings.enable2fa,
-            'twoFactorMethod': settings.two_factor_method,
-            'hasPassword': bool(settings.password_hash)
-        }), 200
+        try:
+            settings = db.query(SecuritySettings).first()
+            if not settings:
+                return jsonify(None), 200
+            return jsonify({
+                'enable2fa': settings.enable2fa,
+                'twoFactorMethod': settings.two_factor_method,
+                'hasPassword': bool(settings.password_hash)
+            }), 200
+        finally:
+            db.close()
 
     @app.post('/api/security/settings')
     def update_security_settings():
         db = SessionLocal()
-        data = request.get_json(force=True) or {}
-        settings = db.query(SecuritySettings).first()
-        if not settings:
-            settings = SecuritySettings()
-            db.add(settings)
-        settings.enable2fa = data.get('enable2fa', False)
-        settings.two_factor_method = data.get('twoFactorMethod', 'email')
-        db.commit()
-        return jsonify({ 'status': 'ok', 'id': settings.id }), 200
+        try:
+            data = request.get_json(force=True) or {}
+            settings = db.query(SecuritySettings).first()
+            if not settings:
+                settings = SecuritySettings()
+                db.add(settings)
+            settings.enable2fa = data.get('enable2fa', False)
+            settings.two_factor_method = data.get('twoFactorMethod', 'email')
+            db.commit()
+            return jsonify({ 'status': 'ok', 'id': settings.id }), 200
+        finally:
+            db.close()
 
     @app.post('/api/security/change-password')
     def change_password():

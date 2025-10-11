@@ -20,15 +20,15 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
-      <!-- Change Password -->
-      <div class="card">
+    <div class="space-y-6">
+      <!-- Change Password Form -->
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="card">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-        <div formGroupName="password" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label class="form-label" for="currentPassword">Current Password</label>
-            <input id="currentPassword" type="password" class="form-input" 
-                   formControlName="current" 
+            <input id="currentPassword" type="password" class="form-input"
+                   formControlName="current"
                    [class.border-red-500]="passwordForm.get('current')?.invalid && passwordForm.get('current')?.touched" />
             @if (passwordForm.get('current')?.invalid && passwordForm.get('current')?.touched) {
               <div class="mt-1 text-sm text-red-600">Current password is required</div>
@@ -36,7 +36,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
           </div>
           <div>
             <label class="form-label" for="newPassword">New Password</label>
-            <input id="newPassword" type="password" class="form-input" 
+            <input id="newPassword" type="password" class="form-input"
                    formControlName="new"
                    [class.border-red-500]="passwordForm.get('new')?.invalid && passwordForm.get('new')?.touched" />
             @if (passwordForm.get('new')?.invalid && passwordForm.get('new')?.touched) {
@@ -49,7 +49,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
           </div>
           <div>
             <label class="form-label" for="confirmPassword">Confirm New Password</label>
-            <input id="confirmPassword" type="password" class="form-input" 
+            <input id="confirmPassword" type="password" class="form-input"
                    formControlName="confirm"
                    [class.border-red-500]="passwordForm.get('confirm')?.invalid && passwordForm.get('confirm')?.touched" />
             @if (passwordForm.get('confirm')?.invalid && passwordForm.get('confirm')?.touched) {
@@ -65,15 +65,15 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
           </div>
         </div>
         <div class="mt-4 flex justify-end">
-          <button type="button" class="btn-outline" (click)="changePassword()" 
+          <button type="submit" class="btn-outline"
                   [disabled]="passwordForm.invalid || changingPassword">
             {{ changingPassword ? 'Updating...' : 'Update Password' }}
           </button>
         </div>
-      </div>
+      </form>
 
-      <!-- Two-Factor Authentication -->
-      <div class="card">
+      <!-- Two-Factor Authentication Form -->
+      <form [formGroup]="securityForm" (ngSubmit)="onSubmit()" class="card">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-medium text-gray-900">Two-Factor Authentication (2FA)</h3>
           <label class="inline-flex items-center gap-2 text-sm text-gray-700">
@@ -81,7 +81,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
             Enable 2FA
           </label>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" *ngIf="form.get('enable2fa')?.value">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" *ngIf="securityForm.get('enable2fa')?.value">
           <div class="md:col-span-2">
             <label class="form-label" for="twoFactorMethod">Method</label>
             <select id="twoFactorMethod" class="form-input" formControlName="twoFactorMethod">
@@ -90,14 +90,13 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
             </select>
           </div>
         </div>
-      </div>
-
-      <div class="flex justify-end">
-        <button type="submit" class="btn-primary" [disabled]="saving">
-          {{ saving ? 'Saving...' : 'Save Security Settings' }}
-        </button>
-      </div>
-    </form>
+        <div class="mt-4 flex justify-end">
+          <button type="submit" class="btn-primary" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save Security Settings' }}
+          </button>
+        </div>
+      </form>
+    </div>
 
     @if (errorMessage) {
       <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -113,45 +112,43 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   `,
 })
 export class SecurityComponent implements OnInit, OnDestroy {
-  form: FormGroup;
+  passwordForm: FormGroup;
+  securityForm: FormGroup;
   saving = false;
   changingPassword = false;
   errorMessage = '';
   successMessage = '';
   passwordValidationErrors: string[] = [];
-  private sub?: any;
+  private passwordSub?: any;
 
   constructor(
     private fb: FormBuilder,
     private securityService: SecurityService
   ) {
-    this.form = this.fb.group({
-      password: this.fb.group({
-        current: ['', Validators.required],
-        new: ['', [Validators.required, this.passwordValidator.bind(this)]],
-        confirm: ['', Validators.required],
-      }, { validators: passwordMatchValidator }),
+    this.passwordForm = this.fb.group({
+      current: ['', Validators.required],
+      new: ['', [Validators.required, this.passwordValidator.bind(this)]],
+      confirm: ['', Validators.required],
+    }, { validators: passwordMatchValidator });
+
+    this.securityForm = this.fb.group({
       enable2fa: [false],
       twoFactorMethod: ['email']
     });
 
-    this.sub = this.form.valueChanges.subscribe(() => {
+    this.passwordSub = this.passwordForm.valueChanges.subscribe(() => {
       this.clearMessages();
       this.updatePasswordValidationErrors();
     });
   }
 
-  get passwordForm() {
-    return this.form.get('password') as FormGroup;
-  }
-
   ngOnInit() {
     this.loadSecuritySettings();
-    
+
     // Set email as default when 2FA is enabled
-    this.form.get('enable2fa')?.valueChanges.subscribe(enabled => {
-      if (enabled && !this.form.get('twoFactorMethod')?.value) {
-        this.form.patchValue({ twoFactorMethod: 'email' });
+    this.securityForm.get('enable2fa')?.valueChanges.subscribe(enabled => {
+      if (enabled && !this.securityForm.get('twoFactorMethod')?.value) {
+        this.securityForm.patchValue({ twoFactorMethod: 'email' });
       }
     });
   }
@@ -160,7 +157,7 @@ export class SecurityComponent implements OnInit, OnDestroy {
     try {
       const settings = await this.securityService.getSecuritySettings().toPromise();
       if (settings) {
-        this.form.patchValue({
+        this.securityForm.patchValue({
           enable2fa: settings.enable2fa,
           twoFactorMethod: settings.twoFactorMethod
         });
@@ -212,19 +209,19 @@ export class SecurityComponent implements OnInit, OnDestroy {
   }
 
   async onSubmit() {
-    if (this.form.invalid) return;
+    if (this.securityForm.invalid) return;
 
     this.saving = true;
     this.clearMessages();
 
-    const { enable2fa, twoFactorMethod } = this.form.value;
+    const { enable2fa, twoFactorMethod } = this.securityForm.value;
 
     try {
       await this.securityService.updateSecuritySettings({
         enable2fa,
         twoFactorMethod: enable2fa ? twoFactorMethod : 'email'
       }).toPromise();
-      
+
       this.successMessage = 'Security settings saved successfully';
     } catch (error) {
       this.errorMessage = 'Failed to save security settings';
@@ -240,6 +237,6 @@ export class SecurityComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe?.();
+    this.passwordSub?.unsubscribe?.();
   }
 }

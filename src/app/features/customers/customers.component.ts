@@ -15,9 +15,9 @@ import { CustomerViewComponent } from './customer-view.component';
     <div class="p-6">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Customers</h1>
-        <button 
+        <button
           class="btn-primary flex items-center"
-          (click)="showCreateForm = true"
+          (click)="addNewCustomer()"
           *ngIf="!showCreateForm">
           <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -311,5 +311,17 @@ export class CustomersComponent implements OnInit {
     this.viewingCustomer = null;
     this.editingCustomer = null;
     this.showCreateForm = false;
+  }
+
+  addNewCustomer() {
+    this.editingCustomer = null;
+    this.viewingCustomer = null;
+    this.customerForm.reset({
+      paymentTerms: 'net30',
+      isActive: true,
+      address: { country: 'USA' },
+      billingAddress: {}
+    });
+    this.showCreateForm = true;
   }
 }
