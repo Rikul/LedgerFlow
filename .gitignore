@@ -9,3 +9,8 @@ dist
 __pycache__
 *.pyc
 instance
+migrations
+backend/__pycache__
+backend/*.pyc
+backend/ledgerflow.db
+.design

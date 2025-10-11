@@ -13,6 +13,7 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
 - **Customers** - Manage customer records, contacts, payment terms, and credit limits
 - **Vendors** - Manage vendor records, categories, payment terms, and account numbers
 - **Settings** - Customize application preferences, company info, tax, notifications, and security
+- **Backend Connectivity** - Automatic backend health monitoring with error handling and recovery
 
 ### 🎨 UI/UX Features
 - Clean and intuitive interface
@@ -20,6 +21,7 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
 - Professional invoice templates
 - Real-time data visualization
 - Accessibility compliant (WCAG guidelines)
+- **Backend Error Handling** - User-friendly error screens with automatic retry and status monitoring
 
 ## Technology Stack
 
@@ -72,7 +74,7 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
    ```bash
    pip install -r backend/requirements.txt
    ```
-3. **Start backend server**:
+3. **Start backend server** (Required for app to load):
    ```bash
    cd backend
    python app.py
@@ -84,6 +86,8 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
    ng serve
    ```
 5. **Open browser** and navigate to `http://localhost:4200`
+
+> **Note**: The application will not load if the backend server is not running. You'll see a backend connectivity error screen with instructions and automatic retry functionality.
 
 ### Build for Production
 
@@ -113,6 +117,17 @@ ng build --configuration production
 - Lazy-loaded routes for better performance
 - Clear separation of concerns
 - Backend models in `/backend/models.py`
+
+## Backend Connectivity
+
+LedgerFlow includes comprehensive backend connectivity monitoring to ensure a smooth user experience:
+
+- **Automatic Health Checks**: The app continuously monitors backend availability
+- **Error Handling**: Shows user-friendly error screens when backend is unavailable
+- **Automatic Recovery**: Automatically reconnects when backend becomes available
+- **Status Monitoring**: Real-time status indicators and retry mechanisms
+
+For detailed information about the backend connectivity features, see [BACKEND_CONNECTIVITY.md](./BACKEND_CONNECTIVITY.md).
 
 ## Future Enhancements
 

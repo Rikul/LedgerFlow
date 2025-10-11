@@ -25,6 +25,16 @@ def create_app():
     Migrate(app, Base)
     Base.metadata.create_all(bind=engine)
 
+    # Health Check Endpoint
+    @app.get('/api/health')
+    def health_check():
+        """Simple health check endpoint to verify backend connectivity"""
+        return jsonify({
+            'status': 'healthy',
+            'service': 'LedgerFlow Backend',
+            'timestamp': datetime.datetime.utcnow().isoformat()
+        }), 200
+
     # Customer CRUD Endpoints
     @app.get('/api/customers')
     def get_customers():
