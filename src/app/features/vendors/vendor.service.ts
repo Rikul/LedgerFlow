@@ -4,10 +4,10 @@ import { Observable } from 'rxjs';
 
 export interface Vendor {
   id?: number;
-  name: string;
+  company: string;
+  contact?: string;
   email: string;
   phone?: string;
-  company?: string;
   address: {
     street?: string;
     city?: string;

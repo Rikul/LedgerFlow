@@ -9,13 +9,13 @@ import { Vendor } from './vendor.service';
   template: `
     <div class="card p-6">
       <button class="btn-outline mb-4" (click)="back.emit()">Back to the list</button>
-      <h2 class="text-xl font-bold mb-2">{{ vendor.name }}</h2>
+      <h2 class="text-xl font-bold mb-2">{{ vendor.company || vendor.contact || 'Vendor Details' }}</h2>
+      <div *ngIf="vendor.contact" class="mb-2"><strong>Contact:</strong> {{ vendor.contact }}</div>
       <div class="mb-2"><strong>Email:</strong> {{ vendor.email }}</div>
-      <div *ngIf="vendor.company" class="mb-2"><strong>Company:</strong> {{ vendor.company }}</div>
       <div *ngIf="vendor.phone" class="mb-2"><strong>Phone:</strong> {{ vendor.phone }}</div>
-      <div *ngIf="vendor.address" class="mb-2">
+      <div *ngIf="hasAddress(vendor)" class="mb-2">
         <strong>Address:</strong>
-        {{ vendor.address.street }}, {{ vendor.address.city }}, {{ vendor.address.state }} {{ vendor.address.zipCode }}, {{ vendor.address.country }}
+        {{ formatAddress(vendor) }}
       </div>
       <div *ngIf="vendor.taxId" class="mb-2"><strong>Tax ID:</strong> {{ vendor.taxId }}</div>
       <div *ngIf="vendor.paymentTerms" class="mb-2"><strong>Payment Terms:</strong> {{ vendor.paymentTerms }}</div>
@@ -31,6 +31,22 @@ import { Vendor } from './vendor.service';
 export class VendorViewComponent {
   @Input() vendor!: Vendor;
   @Output() back = new EventEmitter<void>();
+
+  hasAddress(vendor: Vendor): boolean {
+    if (!vendor.address) {
+      return false;
+    }
+    const { street, city, state, zipCode, country } = vendor.address;
+    return Boolean(street || city || state || zipCode || country);
+  }
+
+  formatAddress(vendor: Vendor): string {
+    if (!vendor.address) {
+      return '';
+    }
+    const { street, city, state, zipCode, country } = vendor.address;
+    return [street, city, state, zipCode, country].filter(Boolean).join(', ');
+  }
 
   getCategoryLabel(category: string): string {
     const labels: { [key: string]: string } = {

@@ -110,7 +110,7 @@ class Customer(Base):
 class Vendor(Base):
     __tablename__ = 'vendors'
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
+    contact_name = Column('name', String(255), nullable=True)
     email = Column(String(255), nullable=True)
     phone = Column(String(50), nullable=True)
     company = Column(String(255), nullable=True)

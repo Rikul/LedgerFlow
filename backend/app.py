@@ -165,19 +165,23 @@ def create_app():
         vendors = db.query(Vendor).all()
         result = []
         for v in vendors:
+            address = {
+                'street': v.street,
+                'city': v.city,
+                'state': v.state,
+                'zipCode': v.zip_code,
+                'country': v.country,
+            }
+            if not any(address.values()):
+                address = None
+
             result.append({
                 'id': v.id,
-                'name': v.name,
+                'company': (v.company or '').strip(),
+                'contact': (v.contact_name or '').strip() or None,
                 'email': v.email,
                 'phone': v.phone,
-                'company': v.company,
-                'address': {
-                    'street': v.street,
-                    'city': v.city,
-                    'state': v.state,
-                    'zipCode': v.zip_code,
-                    'country': v.country,
-                },
+                'address': address,
                 'taxId': v.tax_id,
                 'paymentTerms': v.payment_terms,
                 'category': v.category,
@@ -192,15 +196,16 @@ def create_app():
     def create_vendor():
         db = SessionLocal()
         data = request.get_json(force=True) or {}
-        name = data.get('name', '').strip()
-        email = data.get('email', '').strip()
-        if not name or not email:
-            return jsonify({'error': 'Name and email are required'}), 400
+        company = (data.get('company') or data.get('name') or '').strip()
+        email = (data.get('email') or '').strip()
+        if not company or not email:
+            return jsonify({'error': 'Company and email are required'}), 400
+        contact = (data.get('contact') or data.get('contactName') or '').strip()
         vendor = Vendor(
-            name=name,
+            contact_name=contact or None,
             email=email,
             phone=data.get('phone'),
-            company=data.get('company'),
+            company=company,
             street=data.get('address', {}).get('street'),
             city=data.get('address', {}).get('city'),
             state=data.get('address', {}).get('state'),
@@ -225,14 +230,15 @@ def create_app():
         vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
         if not vendor:
             return jsonify({'error': 'Vendor not found'}), 404
-        name = data.get('name', '').strip()
-        email = data.get('email', '').strip()
-        if not name or not email:
-            return jsonify({'error': 'Name and email are required'}), 400
-        vendor.name = name
+        company = (data.get('company') or data.get('name') or '').strip()
+        email = (data.get('email') or '').strip()
+        if not company or not email:
+            return jsonify({'error': 'Company and email are required'}), 400
+        contact = (data.get('contact') or data.get('contactName') or '').strip()
+        vendor.contact_name = contact or None
         vendor.email = email
         vendor.phone = data.get('phone')
-        vendor.company = data.get('company')
+        vendor.company = company
         vendor.street = data.get('address', {}).get('street')
         vendor.city = data.get('address', {}).get('city')
         vendor.state = data.get('address', {}).get('state')
