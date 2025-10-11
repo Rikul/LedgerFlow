@@ -12,7 +12,8 @@ instance
 migrations
 backend/__pycache__
 backend/*.pyc
-backend/ledgerflow.db
+ledgerflow.db
+*.db
 .design
 tmp
 *.log
