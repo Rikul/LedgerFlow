@@ -36,12 +36,12 @@ import { VendorViewComponent } from './vendor-view.component';
           <!-- Basic Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="form-label" for="name">Vendor Name *</label>
-              <input id="name" type="text" class="form-input" formControlName="name" placeholder="ABC Supplies" />
-            </div>
-            <div>
               <label class="form-label" for="company">Company *</label>
               <input id="company" type="text" class="form-input" formControlName="company" placeholder="ABC Supplies Inc." />
+            </div>
+            <div>
+              <label class="form-label" for="contact">Contact</label>
+              <input id="contact" type="text" class="form-input" formControlName="contact" placeholder="Jane Smith" />
             </div>
             <div>
               <label class="form-label" for="email">Email *</label>
@@ -174,8 +174,8 @@ import { VendorViewComponent } from './vendor-view.component';
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Info</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Terms</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -186,8 +186,8 @@ import { VendorViewComponent } from './vendor-view.component';
               <tr *ngFor="let vendor of filteredVendors">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div class="text-sm font-medium text-gray-900 cursor-pointer hover:underline" (click)="viewVendor(vendor)">{{ vendor.name }}</div>
-                    <div class="text-sm text-gray-500" *ngIf="vendor.company">{{ vendor.company }}</div>
+                    <div class="text-sm font-medium text-gray-900 cursor-pointer hover:underline" (click)="viewVendor(vendor)">{{ vendor.company || vendor.contact || 'Unnamed Vendor' }}</div>
+                    <div class="text-sm text-gray-500" *ngIf="vendor.contact && vendor.company">{{ vendor.contact }}</div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -235,10 +235,10 @@ export class VendorsComponent implements OnInit {
 
   constructor(private fb: FormBuilder, private vendorService: VendorService) {
     this.vendorForm = this.fb.group({
-      name: ['', Validators.required],
+      company: ['', Validators.required],
+      contact: [''],
       email: ['', [Validators.required, Validators.email]],
       phone: [''],
-      company: ['', Validators.required],
       address: this.fb.group({
         street: [''],
         city: [''],
@@ -275,11 +275,13 @@ export class VendorsComponent implements OnInit {
 
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(vendor =>
-        vendor.name.toLowerCase().includes(term) ||
-        vendor.email.toLowerCase().includes(term) ||
-        (vendor.company && vendor.company.toLowerCase().includes(term))
-      );
+      filtered = filtered.filter(vendor => {
+        const company = vendor.company?.toLowerCase() || '';
+        const contact = vendor.contact?.toLowerCase() || '';
+        const email = vendor.email?.toLowerCase() || '';
+        const phone = vendor.phone?.toLowerCase() || '';
+        return company.includes(term) || contact.includes(term) || email.includes(term) || phone.includes(term);
+      });
     }
 
     this.filteredVendors = filtered;
@@ -316,7 +318,8 @@ export class VendorsComponent implements OnInit {
   }
 
   deleteVendor(vendor: Vendor) {
-    if (confirm(`Are you sure you want to delete ${vendor.name}?`)) {
+    const vendorLabel = vendor.company || vendor.contact || 'this vendor';
+    if (confirm(`Are you sure you want to delete ${vendorLabel}?`)) {
       this.saving = true;
       this.vendorService.deleteVendor(vendor.id!).subscribe(() => {
         this.loadVendors();

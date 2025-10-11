@@ -75,10 +75,10 @@ import { Router, ActivatedRoute } from '@angular/router';
             <!-- Vendor -->
             <div>
               <label class="form-label">Vendor/Merchant</label>
-              <input type="text" 
-                     formControlName="vendor" 
-                     class="form-input" 
-                     placeholder="Enter vendor name">
+              <input type="text"
+                     formControlName="vendor"
+                     class="form-input"
+                     placeholder="Enter company name">
             </div>
 
             <!-- Payment Method -->
