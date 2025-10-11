@@ -1,5 +1,5 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean
-from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session, relationship
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,7 +11,20 @@ SessionLocal = scoped_session(sessionmaker(bind=engine, autocommit=False, autofl
 Base = declarative_base()
 
 # Export for use in other modules
-__all__ = ['Base', 'SessionLocal', 'engine', 'DATABASE_URL', 'Company', 'TaxSettings', 'NotificationSettings', 'SecuritySettings', 'Customer', 'Vendor']
+__all__ = [
+    'Base',
+    'SessionLocal',
+    'engine',
+    'DATABASE_URL',
+    'Company',
+    'TaxSettings',
+    'NotificationSettings',
+    'SecuritySettings',
+    'Customer',
+    'Vendor',
+    'Invoice',
+    'InvoiceItem',
+]
 
 
 class Company(Base):
@@ -126,6 +139,42 @@ class Vendor(Base):
     notes = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(String(50), nullable=True)
+
+
+class Invoice(Base):
+    __tablename__ = 'invoices'
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_number = Column(String(50), nullable=False, unique=True)
+    customer_id = Column(Integer, ForeignKey('customers.id'), nullable=False)
+    status = Column(String(20), default='draft')
+    issue_date = Column(String(50), nullable=True)
+    due_date = Column(String(50), nullable=True)
+    payment_terms = Column(String(50), nullable=True)
+    notes = Column(String(500), nullable=True)
+    terms = Column(String(500), nullable=True)
+    subtotal = Column(Float, default=0.0)
+    tax_total = Column(Float, default=0.0)
+    discount_total = Column(Float, default=0.0)
+    total = Column(Float, default=0.0)
+    created_at = Column(String(50), nullable=True)
+    updated_at = Column(String(50), nullable=True)
+
+    customer = relationship('Customer')
+    items = relationship('InvoiceItem', cascade='all, delete-orphan', lazy='joined', back_populates='invoice')
+
+
+class InvoiceItem(Base):
+    __tablename__ = 'invoice_items'
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_id = Column(Integer, ForeignKey('invoices.id', ondelete='CASCADE'), nullable=False)
+    description = Column(String(255), nullable=False)
+    quantity = Column(Float, default=1.0)
+    rate = Column(Float, default=0.0)
+    tax_rate = Column(Float, default=0.0)
+
+    invoice = relationship('Invoice', back_populates='items')
 
 class SecuritySettings(Base):
     __tablename__ = 'security_settings'

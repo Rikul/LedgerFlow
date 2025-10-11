@@ -4,7 +4,22 @@ import datetime
 from flask_cors import CORS
 from flask_migrate import Migrate
 import bcrypt
-from models import Base, SessionLocal, engine, Company, TaxSettings, NotificationSettings, SecuritySettings, Customer, Vendor, DATABASE_URL
+from models import (
+    Base,
+    SessionLocal,
+    engine,
+    Company,
+    TaxSettings,
+    NotificationSettings,
+    SecuritySettings,
+    Customer,
+    Vendor,
+    Invoice,
+    InvoiceItem,
+    DATABASE_URL,
+)
+from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import IntegrityError
 
 
 # Replace this with .env in production
@@ -20,10 +35,69 @@ def create_app():
     
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
+
     # Initialize migrations (variable not used but needed for Flask-Migrate)
     Migrate(app, Base)
     Base.metadata.create_all(bind=engine)
+
+    allowed_statuses = {'draft', 'sent', 'paid', 'overdue'}
+
+    def parse_float(value, default=0.0):
+        try:
+            if value in (None, ''):
+                return default
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
+    def normalize_status(value):
+        value = (value or 'draft').lower()
+        if value not in allowed_statuses:
+            return 'draft'
+        return value
+
+    def serialize_invoice(invoice, include_items=True):
+        customer = None
+        if invoice.customer:
+            customer = {
+                'id': invoice.customer.id,
+                'name': invoice.customer.name,
+                'email': invoice.customer.email,
+                'company': invoice.customer.company,
+            }
+
+        data = {
+            'id': invoice.id,
+            'invoiceNumber': invoice.invoice_number,
+            'customerId': invoice.customer_id,
+            'status': invoice.status,
+            'issueDate': invoice.issue_date,
+            'dueDate': invoice.due_date,
+            'paymentTerms': invoice.payment_terms,
+            'notes': invoice.notes,
+            'terms': invoice.terms,
+            'subtotal': invoice.subtotal or 0.0,
+            'taxTotal': invoice.tax_total or 0.0,
+            'discountTotal': invoice.discount_total or 0.0,
+            'total': invoice.total or 0.0,
+            'createdAt': invoice.created_at,
+            'updatedAt': invoice.updated_at,
+            'customer': customer,
+        }
+
+        if include_items:
+            data['lineItems'] = [
+                {
+                    'id': item.id,
+                    'description': item.description,
+                    'quantity': item.quantity,
+                    'rate': item.rate,
+                    'taxRate': item.tax_rate,
+                }
+                for item in invoice.items
+            ]
+
+        return data
 
     # Health Check Endpoint
     @app.get('/api/health')
@@ -262,7 +336,214 @@ def create_app():
         db.delete(vendor)
         db.commit()
         return jsonify({'status': 'ok'}), 200
-    
+
+    # Invoice CRUD Endpoints
+    @app.get('/api/invoices')
+    def get_invoices():
+        db = SessionLocal()
+        invoices = (
+            db.query(Invoice)
+            .options(joinedload(Invoice.customer), joinedload(Invoice.items))
+            .order_by(Invoice.id.desc())
+            .all()
+        )
+        return jsonify([serialize_invoice(invoice) for invoice in invoices]), 200
+
+    @app.get('/api/invoices/<int:invoice_id>')
+    def get_invoice(invoice_id):
+        db = SessionLocal()
+        invoice = (
+            db.query(Invoice)
+            .options(joinedload(Invoice.customer), joinedload(Invoice.items))
+            .filter(Invoice.id == invoice_id)
+            .first()
+        )
+        if not invoice:
+            return jsonify({'error': 'Invoice not found'}), 404
+        return jsonify(serialize_invoice(invoice)), 200
+
+    @app.post('/api/invoices')
+    def create_invoice():
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        invoice_number = (data.get('invoiceNumber') or '').strip()
+        customer_id = data.get('customerId')
+        try:
+            customer_id = int(customer_id)
+        except (TypeError, ValueError):
+            customer_id = None
+
+        if not invoice_number or not customer_id:
+            return jsonify({'error': 'Invoice number and customer are required'}), 400
+
+        line_items = data.get('lineItems') or []
+        parsed_items = []
+        subtotal = 0.0
+        tax_total = 0.0
+
+        for item in line_items:
+            description = (item.get('description') or '').strip()
+            if not description:
+                continue
+            quantity = parse_float(item.get('quantity'), 0.0)
+            rate = parse_float(item.get('rate'), 0.0)
+            tax_rate = parse_float(item.get('taxRate'), 0.0)
+            amount = quantity * rate
+            subtotal += amount
+            tax_total += amount * (tax_rate / 100.0)
+            parsed_items.append({
+                'description': description,
+                'quantity': quantity,
+                'rate': rate,
+                'tax_rate': tax_rate,
+            })
+
+        discount_total = parse_float(data.get('discountTotal'), 0.0)
+        total = subtotal + tax_total - discount_total
+        now = datetime.datetime.utcnow().isoformat()
+
+        invoice = Invoice(
+            invoice_number=invoice_number,
+            customer_id=customer_id,
+            status=normalize_status(data.get('status')),
+            issue_date=data.get('issueDate'),
+            due_date=data.get('dueDate'),
+            payment_terms=data.get('paymentTerms'),
+            notes=data.get('notes'),
+            terms=data.get('terms'),
+            subtotal=subtotal,
+            tax_total=tax_total,
+            discount_total=discount_total,
+            total=total,
+            created_at=now,
+            updated_at=now,
+        )
+
+        db.add(invoice)
+
+        try:
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+            return jsonify({'error': 'Invoice number must be unique'}), 400
+
+        for item in parsed_items:
+            db.add(InvoiceItem(
+                invoice_id=invoice.id,
+                description=item['description'],
+                quantity=item['quantity'],
+                rate=item['rate'],
+                tax_rate=item['tax_rate'],
+            ))
+
+        db.commit()
+
+        invoice = (
+            db.query(Invoice)
+            .options(joinedload(Invoice.customer), joinedload(Invoice.items))
+            .filter(Invoice.id == invoice.id)
+            .first()
+        )
+        return jsonify(serialize_invoice(invoice)), 201
+
+    @app.put('/api/invoices/<int:invoice_id>')
+    def update_invoice(invoice_id):
+        db = SessionLocal()
+        data = request.get_json(force=True) or {}
+        invoice = (
+            db.query(Invoice)
+            .options(joinedload(Invoice.items), joinedload(Invoice.customer))
+            .filter(Invoice.id == invoice_id)
+            .first()
+        )
+
+        if not invoice:
+            return jsonify({'error': 'Invoice not found'}), 404
+
+        invoice_number = (data.get('invoiceNumber') or '').strip()
+        customer_id = data.get('customerId')
+        try:
+            customer_id = int(customer_id)
+        except (TypeError, ValueError):
+            customer_id = None
+
+        if not invoice_number or not customer_id:
+            return jsonify({'error': 'Invoice number and customer are required'}), 400
+
+        line_items = data.get('lineItems') or []
+        parsed_items = []
+        subtotal = 0.0
+        tax_total = 0.0
+
+        for item in line_items:
+            description = (item.get('description') or '').strip()
+            if not description:
+                continue
+            quantity = parse_float(item.get('quantity'), 0.0)
+            rate = parse_float(item.get('rate'), 0.0)
+            tax_rate = parse_float(item.get('taxRate'), 0.0)
+            amount = quantity * rate
+            subtotal += amount
+            tax_total += amount * (tax_rate / 100.0)
+            parsed_items.append({
+                'description': description,
+                'quantity': quantity,
+                'rate': rate,
+                'tax_rate': tax_rate,
+            })
+
+        discount_total = parse_float(data.get('discountTotal'), 0.0)
+        total = subtotal + tax_total - discount_total
+
+        invoice.invoice_number = invoice_number
+        invoice.customer_id = customer_id
+        invoice.status = normalize_status(data.get('status'))
+        invoice.issue_date = data.get('issueDate')
+        invoice.due_date = data.get('dueDate')
+        invoice.payment_terms = data.get('paymentTerms')
+        invoice.notes = data.get('notes')
+        invoice.terms = data.get('terms')
+        invoice.subtotal = subtotal
+        invoice.tax_total = tax_total
+        invoice.discount_total = discount_total
+        invoice.total = total
+        invoice.updated_at = datetime.datetime.utcnow().isoformat()
+
+        db.query(InvoiceItem).filter(InvoiceItem.invoice_id == invoice.id).delete()
+
+        for item in parsed_items:
+            db.add(InvoiceItem(
+                invoice_id=invoice.id,
+                description=item['description'],
+                quantity=item['quantity'],
+                rate=item['rate'],
+                tax_rate=item['tax_rate'],
+            ))
+
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            return jsonify({'error': 'Invoice number must be unique'}), 400
+
+        invoice = (
+            db.query(Invoice)
+            .options(joinedload(Invoice.customer), joinedload(Invoice.items))
+            .filter(Invoice.id == invoice.id)
+            .first()
+        )
+        return jsonify(serialize_invoice(invoice)), 200
+
+    @app.delete('/api/invoices/<int:invoice_id>')
+    def delete_invoice(invoice_id):
+        db = SessionLocal()
+        invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+        if not invoice:
+            return jsonify({'error': 'Invoice not found'}), 404
+        db.delete(invoice)
+        db.commit()
+        return jsonify({'status': 'ok'}), 200
+
     @app.teardown_appcontext
     def shutdown_session(exception=None):
         SessionLocal.remove()
