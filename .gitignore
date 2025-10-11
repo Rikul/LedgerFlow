@@ -14,3 +14,5 @@ backend/__pycache__
 backend/*.pyc
 backend/ledgerflow.db
 .design
+tmp
+*.log
