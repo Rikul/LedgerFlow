@@ -17,3 +17,7 @@ ledgerflow.db
 .design
 tmp
 *.log
+.pytest_cache
+htmlcov
+.coverage
+*.egg-info
