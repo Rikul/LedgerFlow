@@ -27,6 +27,17 @@ backend/
 │   ├── invoices.py     # Invoice CRUD operations
 │   ├── company.py      # Company settings
 │   └── settings.py     # Tax, notification, and security settings
+├── tests/              # Comprehensive test suite (57 tests)
+│   ├── conftest.py     # Pytest fixtures and configuration
+│   ├── test_health.py  # Health check endpoint tests
+│   ├── test_utils.py   # Utility function tests
+│   ├── test_customers.py # Customer CRUD tests
+│   ├── test_vendors.py # Vendor CRUD tests
+│   ├── test_company.py # Company settings tests
+│   ├── test_invoices.py # Invoice CRUD and calculation tests
+│   ├── test_settings.py # Tax, notification, security tests
+│   └── README.md       # Test documentation
+├── pytest.ini          # Pytest configuration
 └── requirements.txt    # Python dependencies
 ```
 
@@ -47,6 +58,41 @@ backend/
    ```bash
    python app.py
    ```
+
+## Testing
+
+The backend includes a comprehensive test suite with 57 tests covering all endpoints and functionality.
+
+### Running Tests
+
+Run all tests:
+```bash
+cd backend
+python -m pytest
+```
+
+Run tests with verbose output:
+```bash
+python -m pytest -v
+```
+
+Run specific test file:
+```bash
+python -m pytest tests/test_customers.py
+```
+
+### Test Coverage
+
+The test suite covers:
+- Health check endpoint (1 test)
+- Utility functions (5 tests)
+- Customer CRUD operations (8 tests)
+- Vendor CRUD operations (8 tests)
+- Company settings (5 tests)
+- Invoice CRUD and calculations (11 tests)
+- Tax, notification, and security settings (19 tests)
+
+See `tests/README.md` for detailed test documentation.
 
 ## API Endpoints
 
