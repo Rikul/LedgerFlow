@@ -21,3 +21,7 @@ tmp
 htmlcov
 .coverage
 *.egg-info
+
+# coding agent files
+GEMINI.md
+CLAUDE.md

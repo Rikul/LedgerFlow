@@ -32,11 +32,11 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
             <input
               type="text"
               placeholder="Search by number, customer or status..."
-              class="input-field"
+              class="w-full input-field border border-gray-300 rounded-md"
               [(ngModel)]="searchTerm"
-              (input)="applyFilters()" />
+              (input)="applyFilters()"/>
           </div>
-          <div>
+          <div  class="md:col-span-1">
             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select class="input-field" [(ngModel)]="statusFilter" (change)="applyFilters()">
               <option value="">All Statuses</option>
@@ -76,44 +76,99 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
       <div *ngIf="error" class="alert-danger">{{ error }}</div>
 
       <!-- Invoice Table -->
-      <div class="card">
-        <div *ngIf="loading" class="py-12 text-center text-gray-500">Loading invoices...</div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div *ngIf="loading" class="py-12 px-6 text-center text-gray-500">Loading invoices...</div>
         <ng-container *ngIf="!loading">
           <div class="overflow-x-auto" *ngIf="filteredInvoices.length; else emptyState">
-            <table class="table w-full">
+            <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
-                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Invoice #</th>
-                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Customer</th>
-                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Date</th>
-                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Due Date</th>
-                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Total</th>
-                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Actions</th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" (click)="sort('invoiceNumber')">
+                    <div class="flex items-center">
+                      Invoice #
+                      <svg *ngIf="sortColumn === 'invoiceNumber'" class="ml-1 w-4 h-4" [class.rotate-180]="sortDirection === 'desc'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                      </svg>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" (click)="sort('customer')">
+                    <div class="flex items-center">
+                      Customer
+                      <svg *ngIf="sortColumn === 'customer'" class="ml-1 w-4 h-4" [class.rotate-180]="sortDirection === 'desc'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                      </svg>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" (click)="sort('date')">
+                    <div class="flex items-center">
+                      Date
+                      <svg *ngIf="sortColumn === 'date'" class="ml-1 w-4 h-4" [class.rotate-180]="sortDirection === 'desc'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                      </svg>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" (click)="sort('dueDate')">
+                    <div class="flex items-center">
+                      Due Date
+                      <svg *ngIf="sortColumn === 'dueDate'" class="ml-1 w-4 h-4" [class.rotate-180]="sortDirection === 'desc'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                      </svg>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" (click)="sort('total')">
+                    <div class="flex items-center">
+                      Total
+                      <svg *ngIf="sortColumn === 'total'" class="ml-1 w-4 h-4" [class.rotate-180]="sortDirection === 'desc'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                      </svg>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" (click)="sort('status')">
+                    <div class="flex items-center">
+                      Status
+                      <svg *ngIf="sortColumn === 'status'" class="ml-1 w-4 h-4" [class.rotate-180]="sortDirection === 'desc'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                      </svg>
+                    </div>
+                  </th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr *ngFor="let invoice of filteredInvoices; trackBy: trackByInvoice">
-                  <td class="px-6 py-4 whitespace-nowrap font-medium text-primary-600">{{ invoice.invoiceNumber }}</td>
-                  <td class="px-6 py-4">
+                  <td class="px-2 py-2 whitespace-nowrap font-medium text-primary-600">{{ invoice.invoiceNumber }}</td>
+                  <td class="px-2 py-2">
                     <div>
                       <p class="font-medium text-gray-900">{{ invoice.customer?.name || 'Unknown Customer' }}</p>
                       <p class="text-sm text-gray-500" *ngIf="invoice.customer?.email">{{ invoice.customer?.email }}</p>
                     </div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">{{ invoice.issueDate | date: 'mediumDate' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">{{ invoice.dueDate | date: 'mediumDate' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap font-medium">{{ invoice.total | currency }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">{{ invoice.issueDate | date: 'mediumDate' }}</td>
+                  <td class="px-2 py-2 whitespace-nowrap">{{ invoice.dueDate | date: 'mediumDate' }}</td>
+                  <td class="px-2 py-2 whitespace-nowrap font-medium">{{ invoice.total | currency }}</td>
+                  <td class="px-2 py-2 whitespace-nowrap">
                     <span class="status-badge" [ngClass]="getStatusBadgeClass(invoice.status)">
                       {{ invoice.status | titlecase }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     <div class="flex space-x-2">
-                      <a [routerLink]="['/invoices/view', invoice.id]" class="text-primary-600 hover:text-primary-900">View</a>
-                      <a [routerLink]="['/invoices/edit', invoice.id]" class="text-gray-600 hover:text-gray-900">Edit</a>
-                      <button class="text-danger-600 hover:text-danger-900" (click)="deleteInvoice(invoice)">Delete</button>
+                      <a [routerLink]="['/invoices/view', invoice.id]" class="text-primary-600 hover:text-primary-900" title="View">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </a>
+                      <a [routerLink]="['/invoices/edit', invoice.id]" class="text-gray-600 hover:text-gray-900" title="Edit">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </a>
+                      <button class="text-danger-600 hover:text-danger-900" (click)="deleteInvoice(invoice)" title="Delete">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -121,7 +176,7 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
             </table>
           </div>
           <ng-template #emptyState>
-            <div class="py-12 text-center text-gray-500">
+            <div class="py-12 px-6 text-center text-gray-500">
               <p class="text-lg font-medium">No invoices found</p>
               <p class="text-sm">Create your first invoice to see it listed here.</p>
             </div>
@@ -130,7 +185,11 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
       </div>
     </div>
   `,
-  styles: []
+  styles: [`
+    .rotate-180 {
+      transform: rotate(180deg);
+    }
+  `]
 })
 export class InvoiceListComponent implements OnInit {
   invoices: Invoice[] = [];
@@ -139,6 +198,8 @@ export class InvoiceListComponent implements OnInit {
   error: string | null = null;
   searchTerm = '';
   statusFilter = '';
+  sortColumn = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
   statusCounts: Record<'total' | InvoiceStatus, number> = {
     total: 0,
     draft: 0,
@@ -182,13 +243,71 @@ export class InvoiceListComponent implements OnInit {
       const matchesStatus = !status || invoice.status === status;
       return matchesTerm && matchesStatus;
     });
+    this.applySorting();
     this.updateStatusCounts();
+  }
+
+  sort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applySorting();
+  }
+
+  private applySorting(): void {
+    if (!this.sortColumn) return;
+
+    this.filteredInvoices.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (this.sortColumn) {
+        case 'invoiceNumber':
+          aValue = a.invoiceNumber;
+          bValue = b.invoiceNumber;
+          break;
+        case 'customer':
+          aValue = a.customer?.name || '';
+          bValue = b.customer?.name || '';
+          break;
+        case 'date':
+          aValue = a.issueDate ? new Date(a.issueDate) : new Date(0);
+          bValue = b.issueDate ? new Date(b.issueDate) : new Date(0);
+          break;
+        case 'dueDate':
+          aValue = a.dueDate ? new Date(a.dueDate) : new Date(0);
+          bValue = b.dueDate ? new Date(b.dueDate) : new Date(0);
+          break;
+        case 'total':
+          aValue = a.total;
+          bValue = b.total;
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return this.sortDirection === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return this.sortDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
   }
 
   resetFilters(): void {
     this.searchTerm = '';
     this.statusFilter = '';
     this.filteredInvoices = [...this.invoices];
+    this.applySorting();
     this.updateStatusCounts();
   }
 

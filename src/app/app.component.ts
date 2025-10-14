@@ -34,7 +34,7 @@ import { Subscription } from 'rxjs';
         <!-- Sidebar -->
         <app-sidebar *ngIf="showLayout" class="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white shadow-sm overflow-y-auto"></app-sidebar>
         <!-- Main Content -->
-        <main [class.ml-64]="showLayout" class="flex-1 p-6 min-h-[calc(100vh-4rem)]">
+        <main [class.ml-64]="showLayout" class="flex-1 p-6 min-h-[calc(100vh-4rem)] overflow-x-hidden">
           <router-outlet></router-outlet>
         </main>
       </div>
