@@ -80,36 +80,36 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
         <div *ngIf="loading" class="py-12 text-center text-gray-500">Loading invoices...</div>
         <ng-container *ngIf="!loading">
           <div class="overflow-x-auto" *ngIf="filteredInvoices.length; else emptyState">
-            <table class="table">
-              <thead>
+            <table class="table w-full">
+              <thead class="bg-gray-50">
                 <tr>
-                  <th>Invoice #</th>
-                  <th>Customer</th>
-                  <th>Date</th>
-                  <th>Due Date</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th class="w-36">Actions</th>
+                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Invoice #</th>
+                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Customer</th>
+                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Date</th>
+                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Due Date</th>
+                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Total</th>
+                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
+                  <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody class="bg-white divide-y divide-gray-200">
                 <tr *ngFor="let invoice of filteredInvoices; trackBy: trackByInvoice">
-                  <td class="font-medium text-primary-600">{{ invoice.invoiceNumber }}</td>
-                  <td>
+                  <td class="px-6 py-4 whitespace-nowrap font-medium text-primary-600">{{ invoice.invoiceNumber }}</td>
+                  <td class="px-6 py-4">
                     <div>
                       <p class="font-medium text-gray-900">{{ invoice.customer?.name || 'Unknown Customer' }}</p>
                       <p class="text-sm text-gray-500" *ngIf="invoice.customer?.email">{{ invoice.customer?.email }}</p>
                     </div>
                   </td>
-                  <td>{{ invoice.issueDate | date: 'mediumDate' }}</td>
-                  <td>{{ invoice.dueDate | date: 'mediumDate' }}</td>
-                  <td class="font-medium">{{ invoice.total | currency }}</td>
-                  <td>
+                  <td class="px-6 py-4 whitespace-nowrap">{{ invoice.issueDate | date: 'mediumDate' }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">{{ invoice.dueDate | date: 'mediumDate' }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap font-medium">{{ invoice.total | currency }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <span class="status-badge" [ngClass]="getStatusBadgeClass(invoice.status)">
                       {{ invoice.status | titlecase }}
                     </span>
                   </td>
-                  <td>
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex space-x-2">
                       <a [routerLink]="['/invoices/view', invoice.id]" class="text-primary-600 hover:text-primary-900">View</a>
                       <a [routerLink]="['/invoices/edit', invoice.id]" class="text-gray-600 hover:text-gray-900">Edit</a>

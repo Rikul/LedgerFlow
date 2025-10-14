@@ -36,152 +36,140 @@ interface InvoiceTotals {
       <div *ngIf="error" class="alert-danger">{{ error }}</div>
 
       <!-- Invoice Form -->
-      <form [formGroup]="form" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Left Column -->
-        <div class="space-y-6">
-          <!-- Customer Selection -->
-          <div class="card">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-medium text-gray-900">Customer</h3>
-              <a routerLink="/customers" class="text-sm text-primary-600 hover:text-primary-900">Manage customers</a>
-            </div>
-            <ng-container *ngIf="customers.length; else noCustomers">
+      <form [formGroup]="form" class="space-y-6">
+        <!-- Invoice Details -->
+        <div class="card">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Invoice Details</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Select Customer</label>
-              <select class="input-field" formControlName="customerId">
-                <option value="" disabled>Select a customer</option>
-                <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.name }}</option>
+              <ng-container *ngIf="customers.length; else noCustomers">
+                <select class="form-input" formControlName="customerId">
+                  <option value="" disabled>Select a customer</option>
+                  <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.name }}</option>
+                </select>
+              </ng-container>
+              <ng-template #noCustomers>
+                <div class="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-600">
+                  No customers found. <a routerLink="/customers" class="text-primary-600 hover:text-primary-900">Create a customer</a> to invoice them.
+                </div>
+              </ng-template>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
+              <input type="text" class="form-input" formControlName="invoiceNumber" placeholder="INV-0001" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
+              <input type="date" class="form-input" formControlName="issueDate" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <input type="date" class="form-input" formControlName="dueDate" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
+              <select class="form-input" formControlName="paymentTerms">
+                <option value="net15">Net 15 days</option>
+                <option value="net30">Net 30 days</option>
+                <option value="net60">Net 60 days</option>
+                <option value="due_on_receipt">Due on receipt</option>
               </select>
-            </ng-container>
-            <ng-template #noCustomers>
-              <div class="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-600">
-                No customers found. <a routerLink="/customers" class="text-primary-600 hover:text-primary-900">Create a customer</a> to invoice them.
-              </div>
-            </ng-template>
-          </div>
-
-          <!-- Invoice Details -->
-          <div class="card">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Invoice Details</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
-                <input type="text" class="input-field" formControlName="invoiceNumber" placeholder="INV-0001" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select class="input-field" formControlName="status">
-                  <option *ngFor="let status of statusOptions" [value]="status">{{ status | titlecase }}</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
-                <input type="date" class="input-field" formControlName="issueDate" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-                <input type="date" class="input-field" formControlName="dueDate" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
-                <select class="input-field" formControlName="paymentTerms">
-                  <option value="net15">Net 15 days</option>
-                  <option value="net30">Net 30 days</option>
-                  <option value="net60">Net 60 days</option>
-                  <option value="due_on_receipt">Due on receipt</option>
-                </select>
-              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select class="form-input" formControlName="status">
+                <option *ngFor="let status of statusOptions" [value]="status">{{ status | titlecase }}</option>
+              </select>
             </div>
           </div>
+        </div>
 
-          <!-- Additional Information -->
-          <div class="card">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea class="input-field" rows="3" formControlName="notes" placeholder="Additional notes for the customer"></textarea>
+        <!-- Line Items -->
+        <div class="card" formArrayName="lineItems">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Line Items</h3>
+            <button type="button" class="btn-secondary" (click)="addLineItem()">Add Item</button>
+          </div>
+
+          <div class="space-y-4">
+            <div class="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
+              <div class="col-span-5">Description</div>
+              <div class="col-span-2">Qty</div>
+              <div class="col-span-2">Rate</div>
+              <div class="col-span-2">Tax %</div>
+              <div class="col-span-1 text-right">Amount</div>
+            </div>
+
+            <div
+              class="grid grid-cols-12 gap-2 items-start"
+              *ngFor="let item of lineItems.controls; let i = index; trackBy: trackByIndex"
+              [formGroupName]="i">
+              <div class="col-span-5">
+                <input type="text" class="form-input" formControlName="description" placeholder="Item description" />
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Terms &amp; Conditions</label>
-                <textarea class="input-field" rows="3" formControlName="terms" placeholder="Payment terms and conditions"></textarea>
+              <div class="col-span-2">
+                <input type="number" min="0" step="1" class="form-input" formControlName="quantity" />
+              </div>
+              <div class="col-span-2">
+                <input type="number" min="0" step="1" class="form-input" formControlName="rate" />
+              </div>
+              <div class="col-span-2">
+                <input type="number" min="0" step="0.1" class="form-input" formControlName="taxRate" />
+              </div>
+              <div class="col-span-1 flex items-center justify-between">
+                <span class="font-medium text-right">{{ calculateLineItemAmount(i) | currency }}</span>
+                <button type="button" class="text-danger-600 hover:text-danger-900" (click)="removeLineItem(i)">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column -->
-        <div class="space-y-6">
-          <!-- Line Items -->
-          <div class="card" formArrayName="lineItems">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-medium text-gray-900">Line Items</h3>
-              <button type="button" class="btn-secondary" (click)="addLineItem()">Add Item</button>
+        <!-- Additional Information -->
+        <div class="card">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <textarea class="form-input" rows="3" formControlName="notes" placeholder="Additional notes for the customer"></textarea>
             </div>
-
-            <div class="space-y-4">
-              <div class="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
-                <div class="col-span-5">Description</div>
-                <div class="col-span-2">Qty</div>
-                <div class="col-span-2">Rate</div>
-                <div class="col-span-2">Tax %</div>
-                <div class="col-span-1 text-right">Amount</div>
-              </div>
-
-              <div
-                class="grid grid-cols-12 gap-2 items-start"
-                *ngFor="let item of lineItems.controls; let i = index; trackBy: trackByIndex"
-                [formGroupName]="i">
-                <div class="col-span-5">
-                  <input type="text" class="input-field" formControlName="description" placeholder="Item description" />
-                </div>
-                <div class="col-span-2">
-                  <input type="number" min="0" step="0.01" class="input-field" formControlName="quantity" />
-                </div>
-                <div class="col-span-2">
-                  <input type="number" min="0" step="0.01" class="input-field" formControlName="rate" />
-                </div>
-                <div class="col-span-2">
-                  <input type="number" min="0" step="0.01" class="input-field" formControlName="taxRate" />
-                </div>
-                <div class="col-span-1 flex items-center justify-between">
-                  <span class="font-medium text-right">{{ calculateLineItemAmount(i) | currency }}</span>
-                  <button type="button" class="text-danger-600 hover:text-danger-900" (click)="removeLineItem(i)">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Terms &amp; Conditions</label>
+              <textarea class="form-input" rows="3" formControlName="terms" placeholder="Payment terms and conditions"></textarea>
             </div>
           </div>
+        </div>
 
-          <!-- Invoice Summary -->
-          <div class="card">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Invoice Summary</h3>
-            <div class="space-y-3">
-              <div class="flex justify-between">
-                <span class="text-gray-600">Subtotal:</span>
-                <span class="font-medium">{{ totals.subtotal | currency }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Tax:</span>
-                <span class="font-medium">{{ totals.taxTotal | currency }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <label class="text-gray-600" for="discountTotal">Discount:</label>
-                <input
-                  id="discountTotal"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  class="input-field w-32 text-right"
-                  formControlName="discountTotal" />
-              </div>
-              <hr class="border-gray-200" />
-              <div class="flex justify-between text-lg">
-                <span class="font-semibold text-gray-900">Total:</span>
-                <span class="font-bold text-gray-900">{{ totals.total | currency }}</span>
-              </div>
+        <!-- Invoice Summary -->
+        <div class="card">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Invoice Summary</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Subtotal:</span>
+              <span class="font-medium">{{ totals.subtotal | currency }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Tax:</span>
+              <span class="font-medium">{{ totals.taxTotal | currency }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span><label class="text-gray-600" for="discountTotal">Discount:</label></span>
+              <span><input
+                id="discountTotal"
+                type="number"
+                min="0"
+                step="1"
+                class="form-input w-20 text-right"
+                formControlName="discountTotal" /></span>
+            </div>
+            <hr class="border-gray-200" />
+            <div class="flex justify-between text-lg">
+              <span class="font-semibold text-gray-900">Total:</span>
+              <span class="font-bold text-gray-900">{{ totals.total | currency }}</span>
             </div>
           </div>
         </div>
@@ -298,7 +286,7 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
 
     const request$ = this.isEditMode && this.invoiceId
       ? this.invoiceService.updateInvoice({ ...payload, id: this.invoiceId })
-      : this.invoiceService.createInvoice(payload);
+            : this.invoiceService.createInvoice(payload);
 
     request$.pipe(takeUntil(this.destroy$)).subscribe({
       next: invoice => {
