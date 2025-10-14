@@ -98,7 +98,7 @@ interface InvoiceTotals {
               <div class="col-span-2">Qty</div>
               <div class="col-span-2">Rate</div>
               <div class="col-span-2">Tax %</div>
-              <div class="col-span-1 text-right">Amount</div>
+              <div class="col-span-1">Amount</div>
             </div>
 
             <div
@@ -132,14 +132,14 @@ interface InvoiceTotals {
         <!-- Additional Information -->
         <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
-          <div class="space-y-4">
-            <div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col">
               <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea class="form-input" rows="3" formControlName="notes" placeholder="Additional notes for the customer"></textarea>
+              <textarea class="form-input h-32" rows="3" formControlName="notes" placeholder="Additional notes for the customer"></textarea>
             </div>
-            <div>
+            <div class="flex flex-col">
               <label class="block text-sm font-medium text-gray-700 mb-1">Terms &amp; Conditions</label>
-              <textarea class="form-input" rows="3" formControlName="terms" placeholder="Payment terms and conditions"></textarea>
+              <textarea class="form-input h-32" rows="3" formControlName="terms" placeholder="Payment terms and conditions"></textarea>
             </div>
           </div>
         </div>
