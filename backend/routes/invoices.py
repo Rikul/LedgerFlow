@@ -52,7 +52,6 @@ def create_invoice():
     line_items = data.get('lineItems') or []
     parsed_items = []
     subtotal = 0.0
-    tax_total = 0.0
 
     for item in line_items:
         description = (item.get('description') or '').strip()
@@ -60,17 +59,16 @@ def create_invoice():
             continue
         quantity = parse_float(item.get('quantity'), 0.0)
         rate = parse_float(item.get('rate'), 0.0)
-        tax_rate = parse_float(item.get('taxRate'), 0.0)
         amount = quantity * rate
         subtotal += amount
-        tax_total += amount * (tax_rate / 100.0)
         parsed_items.append({
             'description': description,
             'quantity': quantity,
             'rate': rate,
-            'tax_rate': tax_rate,
         })
 
+    tax_rate = parse_float(data.get('taxRate'), 0.0)
+    tax_total = subtotal * (tax_rate / 100.0)
     discount_total = parse_float(data.get('discountTotal'), 0.0)
     total = subtotal + tax_total - discount_total
     now = datetime.datetime.utcnow().isoformat()
@@ -84,6 +82,7 @@ def create_invoice():
         payment_terms=data.get('paymentTerms'),
         notes=data.get('notes'),
         terms=data.get('terms'),
+        tax_rate=tax_rate,
         subtotal=subtotal,
         tax_total=tax_total,
         discount_total=discount_total,
@@ -106,7 +105,6 @@ def create_invoice():
             description=item['description'],
             quantity=item['quantity'],
             rate=item['rate'],
-            tax_rate=item['tax_rate'],
         ))
 
     db.commit()
@@ -147,7 +145,6 @@ def update_invoice(invoice_id):
     line_items = data.get('lineItems') or []
     parsed_items = []
     subtotal = 0.0
-    tax_total = 0.0
 
     for item in line_items:
         description = (item.get('description') or '').strip()
@@ -155,17 +152,16 @@ def update_invoice(invoice_id):
             continue
         quantity = parse_float(item.get('quantity'), 0.0)
         rate = parse_float(item.get('rate'), 0.0)
-        tax_rate = parse_float(item.get('taxRate'), 0.0)
         amount = quantity * rate
         subtotal += amount
-        tax_total += amount * (tax_rate / 100.0)
         parsed_items.append({
             'description': description,
             'quantity': quantity,
             'rate': rate,
-            'tax_rate': tax_rate,
         })
 
+    tax_rate = parse_float(data.get('taxRate'), 0.0)
+    tax_total = subtotal * (tax_rate / 100.0)
     discount_total = parse_float(data.get('discountTotal'), 0.0)
     total = subtotal + tax_total - discount_total
 
@@ -177,6 +173,7 @@ def update_invoice(invoice_id):
     invoice.payment_terms = data.get('paymentTerms')
     invoice.notes = data.get('notes')
     invoice.terms = data.get('terms')
+    invoice.tax_rate = tax_rate
     invoice.subtotal = subtotal
     invoice.tax_total = tax_total
     invoice.discount_total = discount_total
@@ -191,7 +188,6 @@ def update_invoice(invoice_id):
             description=item['description'],
             quantity=item['quantity'],
             rate=item['rate'],
-            tax_rate=item['tax_rate'],
         ))
 
     try:

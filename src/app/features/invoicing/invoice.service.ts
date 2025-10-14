@@ -9,7 +9,6 @@ export interface InvoiceLineItem {
   description: string;
   quantity: number;
   rate: number;
-  taxRate?: number;
 }
 
 export interface InvoiceCustomerSummary {
@@ -29,6 +28,7 @@ export interface Invoice {
   paymentTerms?: string;
   notes?: string;
   terms?: string;
+  taxRate?: number;
   subtotal?: number;
   taxTotal?: number;
   discountTotal?: number;

@@ -17,6 +17,7 @@ class Invoice(Base):
     payment_terms = Column(String(50), nullable=True)
     notes = Column(String(500), nullable=True)
     terms = Column(String(500), nullable=True)
+    tax_rate = Column(Float, default=0.0)
     subtotal = Column(Float, default=0.0)
     tax_total = Column(Float, default=0.0)
     discount_total = Column(Float, default=0.0)
@@ -37,6 +38,5 @@ class InvoiceItem(Base):
     description = Column(String(255), nullable=False)
     quantity = Column(Float, default=1.0)
     rate = Column(Float, default=0.0)
-    tax_rate = Column(Float, default=0.0)
 
     invoice = relationship('Invoice', back_populates='items')

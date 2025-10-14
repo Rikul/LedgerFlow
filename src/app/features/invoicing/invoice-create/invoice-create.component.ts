@@ -5,12 +5,18 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { InvoiceService, Invoice, InvoiceLineItem, InvoiceStatus } from '../invoice.service';
 import { CustomerService, Customer } from '../../customers/customer.service';
+import { TaxSettingsService } from '../../settings/tax-settings/tax-settings.service';
 
 interface InvoiceTotals {
   subtotal: number;
   taxTotal: number;
   discountTotal: number;
   total: number;
+}
+
+interface TaxRateOption {
+  name: string;
+  rate: number;
 }
 
 @Component({
@@ -77,6 +83,12 @@ interface InvoiceTotals {
               </select>
             </div>
             <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tax Rate</label>
+              <select class="form-input" formControlName="taxRate">
+                <option *ngFor="let taxOption of taxRateOptions" [value]="taxOption.rate">{{ taxOption.name }} ({{ taxOption.rate }}%)</option>
+              </select>
+            </div>
+            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select class="form-input" formControlName="status">
                 <option *ngFor="let status of statusOptions" [value]="status">{{ status | titlecase }}</option>
@@ -86,6 +98,7 @@ interface InvoiceTotals {
         </div>
 
         <!-- Line Items -->
+        <!-- Line Items -->
         <div class="card" formArrayName="lineItems">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium text-gray-900">Line Items</h3>
@@ -93,19 +106,18 @@ interface InvoiceTotals {
           </div>
 
           <div class="space-y-4">
-            <div class="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
-              <div class="col-span-5">Description</div>
+            <div class="grid grid-cols-11 gap-2 text-sm font-medium text-gray-700">
+              <div class="col-span-6">Description</div>
               <div class="col-span-2">Qty</div>
               <div class="col-span-2">Rate</div>
-              <div class="col-span-2">Tax %</div>
               <div class="col-span-1">Amount</div>
             </div>
 
             <div
-              class="grid grid-cols-12 gap-2 items-start"
+              class="grid grid-cols-11 gap-2 items-start"
               *ngFor="let item of lineItems.controls; let i = index; trackBy: trackByIndex"
               [formGroupName]="i">
-              <div class="col-span-5">
+              <div class="col-span-6">
                 <input type="text" class="form-input" formControlName="description" placeholder="Item description" />
               </div>
               <div class="col-span-2">
@@ -113,9 +125,6 @@ interface InvoiceTotals {
               </div>
               <div class="col-span-2">
                 <input type="number" min="0" step="1" class="form-input" formControlName="rate" />
-              </div>
-              <div class="col-span-2">
-                <input type="number" min="0" step="0.1" class="form-input" formControlName="taxRate" />
               </div>
               <div class="col-span-1 flex items-center justify-between">
                 <span class="font-medium text-right">{{ calculateLineItemAmount(i) | currency }}</span>
@@ -127,9 +136,7 @@ interface InvoiceTotals {
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Additional Information -->
+        </div>        <!-- Additional Information -->
         <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -186,6 +193,7 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
   form: FormGroup;
   customers: Customer[] = [];
   statusOptions: InvoiceStatus[] = ['draft', 'sent', 'paid', 'overdue'];
+  taxRateOptions: TaxRateOption[] = [];
   totals: InvoiceTotals = { subtotal: 0, taxTotal: 0, discountTotal: 0, total: 0 };
   submitting = false;
   loadingInvoice = false;
@@ -198,6 +206,7 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private invoiceService: InvoiceService,
     private customerService: CustomerService,
+    private taxSettingsService: TaxSettingsService,
     private route: ActivatedRoute,
     private router: Router
   ) {
@@ -208,6 +217,7 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
       issueDate: ['', Validators.required],
       dueDate: ['', Validators.required],
       paymentTerms: ['net30', Validators.required],
+      taxRate: [0, [Validators.min(0)]],
       notes: [''],
       terms: [''],
       discountTotal: [0, [Validators.min(0)]],
@@ -217,6 +227,7 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCustomers();
+    this.loadTaxSettings();
     this.observeTotals();
 
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
@@ -305,7 +316,6 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
       description: [item?.description || '', Validators.required],
       quantity: [item?.quantity ?? 1, [Validators.required, Validators.min(0)]],
       rate: [item?.rate ?? 0, [Validators.required, Validators.min(0)]],
-      taxRate: [item?.taxRate ?? 0, [Validators.min(0)]],
     });
   }
 
@@ -316,6 +326,25 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.error = 'Failed to load customers. Please refresh the page.';
+      }
+    });
+  }
+
+  private loadTaxSettings(): void {
+    this.taxSettingsService.getTaxSettings().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (settings: any) => {
+        if (settings) {
+          this.taxRateOptions = [
+            { name: 'No Tax', rate: 0 },
+            { name: `Default (${settings.defaultTaxRate}%)`, rate: settings.defaultTaxRate },
+            ...settings.rates.map((r: any) => ({ name: `${r.name} (${r.rate}%)`, rate: r.rate }))
+          ];
+        } else {
+          this.taxRateOptions = [{ name: 'No Tax', rate: 0 }];
+        }
+      },
+      error: () => {
+        this.taxRateOptions = [{ name: 'No Tax', rate: 0 }];
       }
     });
   }
@@ -343,6 +372,7 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
       issueDate: invoice.issueDate,
       dueDate: invoice.dueDate,
       paymentTerms: invoice.paymentTerms,
+      taxRate: invoice.taxRate ?? 0,
       notes: invoice.notes,
       terms: invoice.terms,
       discountTotal: invoice.discountTotal ?? 0,
@@ -367,7 +397,6 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
         description: item.description.trim(),
         quantity: this.toNumber(item.quantity),
         rate: this.toNumber(item.rate),
-        taxRate: this.toNumber(item.taxRate),
       }));
 
     const totals = this.calculateTotals();
@@ -379,6 +408,7 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
       issueDate: value.issueDate,
       dueDate: value.dueDate,
       paymentTerms: value.paymentTerms,
+      taxRate: this.toNumber(value.taxRate),
       notes: value.notes,
       terms: value.terms,
       subtotal: totals.subtotal,
@@ -399,10 +429,8 @@ export class InvoiceCreateComponent implements OnInit, OnDestroy {
   private calculateTotals(): InvoiceTotals {
     const items = this.lineItems.controls.map(group => group.value as InvoiceLineItem);
     const subtotal = items.reduce((sum, item) => sum + this.toNumber(item.quantity) * this.toNumber(item.rate), 0);
-    const taxTotal = items.reduce((sum, item) => {
-      const amount = this.toNumber(item.quantity) * this.toNumber(item.rate);
-      return sum + amount * (this.toNumber(item.taxRate) / 100);
-    }, 0);
+    const taxRate = this.toNumber(this.form.get('taxRate')?.value);
+    const taxTotal = subtotal * (taxRate / 100);
     const discount = this.toNumber(this.form.get('discountTotal')?.value);
     const total = subtotal + taxTotal - discount;
 

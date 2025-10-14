@@ -42,6 +42,7 @@ def serialize_invoice(invoice, include_items=True):
         'paymentTerms': invoice.payment_terms,
         'notes': invoice.notes,
         'terms': invoice.terms,
+        'taxRate': invoice.tax_rate or 0.0,
         'subtotal': invoice.subtotal or 0.0,
         'taxTotal': invoice.tax_total or 0.0,
         'discountTotal': invoice.discount_total or 0.0,
@@ -58,7 +59,6 @@ def serialize_invoice(invoice, include_items=True):
                 'description': item.description,
                 'quantity': item.quantity,
                 'rate': item.rate,
-                'taxRate': item.tax_rate,
             }
             for item in invoice.items
         ]

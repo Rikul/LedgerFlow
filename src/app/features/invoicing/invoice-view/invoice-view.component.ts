@@ -72,7 +72,6 @@ import { InvoiceService, Invoice, InvoiceStatus, InvoiceLineItem } from '../invo
                 <th class="text-left py-3 text-gray-900 font-medium">Description</th>
                 <th class="text-center py-3 text-gray-900 font-medium">Qty</th>
                 <th class="text-right py-3 text-gray-900 font-medium">Rate</th>
-                <th class="text-right py-3 text-gray-900 font-medium">Tax %</th>
                 <th class="text-right py-3 text-gray-900 font-medium">Amount</th>
               </tr>
             </thead>
@@ -83,7 +82,6 @@ import { InvoiceService, Invoice, InvoiceStatus, InvoiceLineItem } from '../invo
                 </td>
                 <td class="text-center py-4">{{ item.quantity }}</td>
                 <td class="text-right py-4">{{ item.rate | currency }}</td>
-                <td class="text-right py-4">{{ item.taxRate || 0 | number:'1.0-2' }}%</td>
                 <td class="text-right py-4 font-medium">{{ getLineItemTotal(item) | currency }}</td>
               </tr>
             </tbody>
@@ -102,7 +100,7 @@ import { InvoiceService, Invoice, InvoiceStatus, InvoiceLineItem } from '../invo
                 <span class="font-medium">{{ invoice.subtotal | currency }}</span>
               </div>
               <div class="flex justify-between py-2">
-                <span class="text-gray-600">Tax:</span>
+                <span class="text-gray-600">Tax ({{ invoice.taxRate || 0 }}%):</span>
                 <span class="font-medium">{{ invoice.taxTotal | currency }}</span>
               </div>
               <div class="flex justify-between py-2">
@@ -177,9 +175,7 @@ export class InvoiceViewComponent implements OnInit {
   }
 
   getLineItemTotal(item: InvoiceLineItem): number {
-    const amount = (item.quantity || 0) * (item.rate || 0);
-    const tax = amount * ((item.taxRate || 0) / 100);
-    return amount + tax;
+    return (item.quantity || 0) * (item.rate || 0);
   }
 
   markAsSent(): void {
