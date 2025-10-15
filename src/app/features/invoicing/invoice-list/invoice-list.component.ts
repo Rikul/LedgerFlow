@@ -53,21 +53,25 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
       </div>
 
       <!-- Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-2">
         <div class="card text-center">
-          <p class="text-2xl font-bold text-gray-900">{{ statusCounts.total }}</p>
+          <p class="text-xl font-bold text-gray-900">{{ statusCounts.total }}</p>
           <p class="text-sm text-gray-500">Total Invoices</p>
         </div>
         <div class="card text-center">
-          <p class="text-2xl font-bold text-gray-900">{{ statusCounts.draft }}</p>
+          <p class="text-xl font-bold text-gray-900">{{ statusCounts.draft }}</p>
           <p class="text-sm text-gray-500">Draft</p>
         </div>
+         <div class="card text-center">
+          <p class="text-xl font-bold text-gray-900">{{ statusCounts.sent }}</p>
+          <p class="text-sm text-gray-500">Sent</p>
+        </div>
         <div class="card text-center">
-          <p class="text-2xl font-bold text-success-600">{{ statusCounts.paid }}</p>
+          <p class="text-xl font-bold text-success-600">{{ statusCounts.paid }}</p>
           <p class="text-sm text-gray-500">Paid</p>
         </div>
         <div class="card text-center">
-          <p class="text-2xl font-bold text-warning-600">{{ statusCounts.overdue }}</p>
+          <p class="text-xl font-bold text-warning-600">{{ statusCounts.overdue }}</p>
           <p class="text-sm text-gray-500">Overdue</p>
         </div>
       </div>
@@ -135,7 +139,7 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr *ngFor="let invoice of filteredInvoices; trackBy: trackByInvoice">
+                <tr *ngFor="let invoice of paginatedInvoices; trackBy: trackByInvoice">
                   <td class="px-2 py-2 whitespace-nowrap font-medium text-primary-600">{{ invoice.invoiceNumber }}</td>
                   <td class="px-2 py-2">
                     <div>
@@ -182,6 +186,33 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
             </div>
           </ng-template>
         </ng-container>
+        
+        <!-- Pagination -->
+        <div *ngIf="totalItems > pageSize" class="flex justify-between items-center mt-6 pt-4 px-2 py-2 border-t border-gray-200">
+          <p class="text-sm text-gray-700">Showing {{ startItem }} to {{ endItem }} of {{ totalItems }} results</p>
+          <div class="flex space-x-2">
+            <button 
+              class="btn-secondary" 
+              [disabled]="currentPage === 1"
+              [class.opacity-50]="currentPage === 1"
+              (click)="previousPage()">
+              Previous
+            </button>
+            <button 
+              *ngFor="let page of pages"
+              [ngClass]="currentPage === page ? 'btn-primary' : 'btn-secondary'"
+              (click)="goToPage(page)">
+              {{ page }}
+            </button>
+            <button 
+              class="btn-secondary" 
+              [disabled]="currentPage === totalPages"
+              [class.opacity-50]="currentPage === totalPages"
+              (click)="nextPage()">
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -192,14 +223,20 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
   `]
 })
 export class InvoiceListComponent implements OnInit {
+  private readonly SORT_STORAGE_KEY = 'invoice-list-sort';
+
   invoices: Invoice[] = [];
   filteredInvoices: Invoice[] = [];
+  paginatedInvoices: Invoice[] = [];
   loading = false;
   error: string | null = null;
   searchTerm = '';
   statusFilter = '';
   sortColumn = '';
   sortDirection: 'asc' | 'desc' = 'asc';
+  currentPage = 1;
+  pageSize = 10;
+  totalItems = 0;
   statusCounts: Record<'total' | InvoiceStatus, number> = {
     total: 0,
     draft: 0,
@@ -211,6 +248,7 @@ export class InvoiceListComponent implements OnInit {
   constructor(private invoiceService: InvoiceService) {}
 
   ngOnInit(): void {
+    this.loadSortingState();
     this.loadInvoices();
   }
 
@@ -221,6 +259,9 @@ export class InvoiceListComponent implements OnInit {
       next: invoices => {
         this.invoices = invoices;
         this.filteredInvoices = [...invoices];
+        this.totalItems = this.filteredInvoices.length;
+        this.currentPage = 1;
+        this.applySorting();
         this.loading = false;
         this.updateStatusCounts();
       },
@@ -243,6 +284,8 @@ export class InvoiceListComponent implements OnInit {
       const matchesStatus = !status || invoice.status === status;
       return matchesTerm && matchesStatus;
     });
+    this.totalItems = this.filteredInvoices.length;
+    this.currentPage = 1; // Reset to first page when filtering
     this.applySorting();
     this.updateStatusCounts();
   }
@@ -254,11 +297,46 @@ export class InvoiceListComponent implements OnInit {
       this.sortColumn = column;
       this.sortDirection = 'asc';
     }
+    this.currentPage = 1; // Reset to first page when sorting
+    this.saveSortingState();
     this.applySorting();
   }
 
+  private loadSortingState(): void {
+    try {
+      const saved = localStorage.getItem(this.SORT_STORAGE_KEY);
+      if (saved) {
+        const sortState = JSON.parse(saved);
+        if (sortState && typeof sortState.column === 'string' && 
+            (sortState.direction === 'asc' || sortState.direction === 'desc')) {
+          this.sortColumn = sortState.column;
+          this.sortDirection = sortState.direction;
+        }
+      }
+    } catch (error) {
+      // Ignore localStorage errors and use default values
+      console.warn('Failed to load sorting state from localStorage:', error);
+    }
+  }
+
+  private saveSortingState(): void {
+    try {
+      const sortState = {
+        column: this.sortColumn,
+        direction: this.sortDirection
+      };
+      localStorage.setItem(this.SORT_STORAGE_KEY, JSON.stringify(sortState));
+    } catch (error) {
+      // Ignore localStorage errors
+      console.warn('Failed to save sorting state to localStorage:', error);
+    }
+  }
+
   private applySorting(): void {
-    if (!this.sortColumn) return;
+    if (!this.sortColumn) {
+      this.applyPagination();
+      return;
+    }
 
     this.filteredInvoices.sort((a, b) => {
       let aValue: any;
@@ -301,12 +379,59 @@ export class InvoiceListComponent implements OnInit {
       }
       return 0;
     });
+
+    this.applyPagination();
+  }
+
+  private applyPagination(): void {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedInvoices = this.filteredInvoices.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.applyPagination();
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.applyPagination();
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.applyPagination();
+    }
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.pageSize);
+  }
+
+  get startItem(): number {
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get endItem(): number {
+    return Math.min(this.currentPage * this.pageSize, this.totalItems);
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
 
   resetFilters(): void {
     this.searchTerm = '';
     this.statusFilter = '';
     this.filteredInvoices = [...this.invoices];
+    this.totalItems = this.filteredInvoices.length;
+    this.currentPage = 1;
     this.applySorting();
     this.updateStatusCounts();
   }
@@ -349,7 +474,7 @@ export class InvoiceListComponent implements OnInit {
 
   private updateStatusCounts(): void {
     const counts: Record<'total' | InvoiceStatus, number> = {
-      total: this.filteredInvoices.length,
+      total: this.totalItems,
       draft: 0,
       sent: 0,
       paid: 0,
