@@ -30,18 +30,17 @@ def test_create_invoice_requires_customer(client):
         'issueDate': '2024-01-01',
         'dueDate': '2024-01-31',
         'paymentTerms': 'net30',
+        'taxRate': 10.0,
         'lineItems': [
             {
                 'description': 'Consulting Services',
                 'quantity': 10,
-                'rate': 100.00,
-                'taxRate': 10.0
+                'rate': 100.00
             },
             {
                 'description': 'Software License',
                 'quantity': 1,
-                'rate': 500.00,
-                'taxRate': 10.0
+                'rate': 500.00
             }
         ],
         'notes': 'Thank you for your business',
@@ -92,12 +91,12 @@ def test_create_invoice_with_discount(client):
     invoice_data = {
         'invoiceNumber': 'INV-DISC-001',
         'customerId': customer_id,
+        'taxRate': 0,
         'lineItems': [
             {
                 'description': 'Product',
                 'quantity': 1,
-                'rate': 1000.00,
-                'taxRate': 0
+                'rate': 1000.00
             }
         ],
         'discountTotal': 100.00
@@ -165,12 +164,12 @@ def test_update_invoice(client):
                                        'invoiceNumber': 'INV-UPD-001',
                                        'customerId': customer_id,
                                        'status': 'draft',
+                                       'taxRate': 0,
                                        'lineItems': [
                                            {
                                                'description': 'Original Item',
                                                'quantity': 1,
-                                               'rate': 100.00,
-                                               'taxRate': 0
+                                               'rate': 100.00
                                            }
                                        ]
                                    }),
@@ -182,12 +181,12 @@ def test_update_invoice(client):
         'invoiceNumber': 'INV-UPD-001',
         'customerId': customer_id,
         'status': 'sent',
+        'taxRate': 0,
         'lineItems': [
             {
                 'description': 'Updated Item',
                 'quantity': 2,
-                'rate': 150.00,
-                'taxRate': 0
+                'rate': 150.00
             }
         ]
     }
