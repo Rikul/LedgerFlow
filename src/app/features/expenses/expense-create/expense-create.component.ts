@@ -56,11 +56,11 @@ import { CustomerService, Customer } from '../../customers/customer.service';
             <!-- Amount -->
             <div>
               <label class="form-label">Amount *</label>
-              <div class="relative">
-                <span class="absolute left-3 top-2 text-gray-500">$</span>
+              <div class="flex">
+                <span class="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">$</span>
                 <input type="number"
                        formControlName="amount"
-                       class="form-input pl-8"
+                       class="form-input rounded-l-none flex-1"
                        placeholder="0.00"
                        step="0.01">
               </div>
@@ -95,9 +95,9 @@ import { CustomerService, Customer } from '../../customers/customer.service';
                      placeholder="Enter tag">
             </div>
 
-            <!-- Linked Vendor -->
+            <!-- Related Vendor -->
             <div>
-              <label class="form-label">Linked Vendor</label>
+              <label class="form-label">Related Vendor</label>
               <select formControlName="vendorId" class="form-input" [disabled]="lookupsLoading">
                 <option [ngValue]="null">No vendor</option>
                 <option *ngFor="let vendor of vendors" [ngValue]="vendor.id">
@@ -107,9 +107,9 @@ import { CustomerService, Customer } from '../../customers/customer.service';
               <p class="text-xs text-gray-500 mt-1">Optional: associate this expense with an existing vendor.</p>
             </div>
 
-            <!-- Linked Customer -->
+            <!-- Related Customer -->
             <div>
-              <label class="form-label">Linked Customer</label>
+              <label class="form-label">Related Customer</label>
               <select formControlName="customerId" class="form-input" [disabled]="lookupsLoading">
                 <option [ngValue]="null">No customer</option>
                 <option *ngFor="let customer of customers" [ngValue]="customer.id">
