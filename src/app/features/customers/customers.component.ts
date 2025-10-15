@@ -196,12 +196,7 @@ import { CustomerViewComponent } from './customer-view.component';
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr *ngFor="let customer of paginatedCustomers; trackBy: trackByCustomer">
                   <td class="px-2 py-2">
-                    <div class="flex items-start space-x-3">
-                      <div class="flex-shrink-0 bg-primary-50 text-primary-600 rounded-full p-2">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
-                        </svg>
-                      </div>
+                    <div class="flex items-start space-x-3">  
                       <div>
                         <button class="font-medium text-gray-900 hover:text-primary-600" (click)="viewCustomer(customer)">{{ customer.name }}</button>
                         <p class="text-sm text-gray-500" *ngIf="customer.company">{{ customer.company }}</p>

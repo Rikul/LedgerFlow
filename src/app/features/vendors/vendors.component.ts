@@ -238,13 +238,9 @@ import { VendorViewComponent } from './vendor-view.component';
                 <tr *ngFor="let vendor of paginatedVendors; trackBy: trackByVendor">
                   <td class="px-2 py-2">
                     <div class="flex items-start space-x-3">
-                      <div class="flex-shrink-0 bg-primary-50 text-primary-600 rounded-full p-2">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7m-6-4h-4a2 2 0 00-2 2v2h8V5a2 2 0 00-2-2z" />
-                        </svg>
-                      </div>
+        
                       <div>
-                        <button class="font-medium text-gray-900 hover:text-primary-600" (click)="viewVendor(vendor)">{{ vendor.company || vendor.contact || 'Unnamed Vendor' }}</button>
+                        <button class="font-medium text-left text-sm text-gray-900 hover:text-primary-600" (click)="viewVendor(vendor)">{{ vendor.company || vendor.contact || 'Unnamed Vendor' }}</button>
                         <p class="text-sm text-gray-500" *ngIf="vendor.contact && vendor.company">{{ vendor.contact }}</p>
                       </div>
                     </div>
