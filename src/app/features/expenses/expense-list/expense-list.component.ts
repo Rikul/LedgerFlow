@@ -179,6 +179,12 @@ interface ExpenseSummary {
           <p class="text-sm text-gray-700">Showing {{ startItem }} to {{ endItem }} of {{ totalItems }} results</p>
           <div class="flex space-x-2">
             <button class="btn-secondary" [disabled]="currentPage === 1" [class.opacity-50]="currentPage === 1" (click)="previousPage()">Previous</button>
+            <button 
+              *ngFor="let page of pages"
+              [ngClass]="currentPage === page ? 'btn-primary' : 'btn-secondary'"
+              (click)="goToPage(page)">
+              {{ page }}
+            </button>
             <button class="btn-secondary" [disabled]="currentPage === totalPages" [class.opacity-50]="currentPage === totalPages" (click)="nextPage()">Next</button>
           </div>
         </div>
@@ -318,6 +324,17 @@ export class ExpenseListComponent implements OnInit {
   nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
+      this.updatePagination();
+    }
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
       this.updatePagination();
     }
   }
