@@ -85,7 +85,12 @@ LedgerFlow is a comprehensive online accounting software designed specifically f
    # or
    ng serve
    ```
+   > When developing inside a container or remote environment, expose the dev server
+   > by passing `--host 0.0.0.0 --port 4200` so that Playwright or other tooling can
+   > reach the Angular app.
 5. **Open browser** and navigate to `http://localhost:4200`
+   > The Flask backend listens on `http://localhost:5000` (bound to `0.0.0.0`), which
+   > must remain running for customer and vendor tables to load data and icons.
 
 > **Note**: The application will not load if the backend server is not running. You'll see a backend connectivity error screen with instructions and automatic retry functionality.
 
