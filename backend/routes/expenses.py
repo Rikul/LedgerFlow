@@ -45,7 +45,7 @@ def _serialize_expense(expense: Expense) -> Dict[str, Any]:
         'referenceNumber': expense.reference_number,
         'description': expense.description,
         'taxDeductible': bool(expense.tax_deductible),
-        'vendorName': expense.vendor_name,
+        'tag': expense.tag,
         'vendorId': expense.vendor_id,
         'customerId': expense.customer_id,
         'createdAt': expense.created_at,
@@ -64,7 +64,7 @@ def _apply_payload(expense: Expense, data: Dict[str, Any]) -> None:
     expense.reference_number = (data.get('referenceNumber') or '').strip() or None
     expense.description = (data.get('description') or '').strip() or None
     expense.tax_deductible = bool(data.get('taxDeductible'))
-    expense.vendor_name = (data.get('vendorName') or '').strip() or None
+    expense.tag = (data.get('tag') or '').strip() or None
 
     vendor_id = data.get('vendorId')
     try:

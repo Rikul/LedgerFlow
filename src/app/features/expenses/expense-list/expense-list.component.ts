@@ -256,7 +256,7 @@ export class ExpenseListComponent implements OnInit {
       const haystack = [
         expense.description,
         expense.referenceNumber,
-        expense.vendorName,
+        expense.tag,
         expense.vendor?.name,
         expense.customer?.name,
       ]
@@ -360,7 +360,7 @@ export class ExpenseListComponent implements OnInit {
     if (expense.customer?.name) {
       return expense.customer.name;
     }
-    return expense.vendorName || 'Unspecified';
+    return expense.tag || 'Unspecified';
   }
 
   getTypeLabel(type: string): string {

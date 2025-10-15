@@ -86,13 +86,13 @@ import { CustomerService, Customer } from '../../customers/customer.service';
               </div>
             </div>
 
-            <!-- Vendor Name -->
+            <!-- Tag -->
             <div>
-              <label class="form-label">Vendor/Merchant Name</label>
+              <label class="form-label">Tag</label>
               <input type="text"
-                     formControlName="vendorName"
+                     formControlName="tag"
                      class="form-input"
-                     placeholder="Enter company name">
+                     placeholder="Enter tag">
             </div>
 
             <!-- Linked Vendor -->
@@ -257,7 +257,7 @@ export class ExpenseCreateComponent implements OnInit {
       type: ['', Validators.required],
       amount: ['', [Validators.required, Validators.min(0.01)]],
       date: ['', Validators.required],
-      vendorName: [''],
+      tag: [''],
       vendorId: [null],
       customerId: [null],
       paymentMethod: [''],
@@ -321,7 +321,7 @@ export class ExpenseCreateComponent implements OnInit {
       type: expense.type,
       amount: expense.amount,
       date: expense.date,
-      vendorName: expense.vendorName || '',
+      tag: expense.tag || '',
       vendorId: expense.vendorId ?? null,
       customerId: expense.customerId ?? null,
       paymentMethod: expense.paymentMethod || '',
@@ -372,7 +372,7 @@ export class ExpenseCreateComponent implements OnInit {
       referenceNumber: formValue.referenceNumber || null,
       description: formValue.description || null,
       taxDeductible: !!formValue.taxDeductible,
-      vendorName: formValue.vendorName || null,
+      tag: formValue.tag || null,
       vendorId: formValue.vendorId ?? null,
       customerId: formValue.customerId ?? null,
     };

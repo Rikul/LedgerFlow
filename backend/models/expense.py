@@ -16,7 +16,7 @@ class Expense(Base):
     reference_number = Column(String(100), nullable=True)
     description = Column(String(500), nullable=True)
     tax_deductible = Column(Boolean, default=False)
-    vendor_name = Column(String(255), nullable=True)
+    tag = Column(String(255), nullable=True)
     vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=True)
     customer_id = Column(Integer, ForeignKey('customers.id'), nullable=True)
     created_at = Column(String(50), nullable=True)

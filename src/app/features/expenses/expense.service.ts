@@ -19,7 +19,7 @@ export interface Expense {
   referenceNumber?: string | null;
   description?: string | null;
   taxDeductible: boolean;
-  vendorName?: string | null;
+  tag?: string | null;
   vendorId?: number | null;
   customerId?: number | null;
   createdAt?: string | null;
