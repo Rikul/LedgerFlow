@@ -17,6 +17,7 @@ from models import (
     Vendor,
     Invoice,
     InvoiceItem,
+    Expense,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     'Vendor',
     'Invoice',
     'InvoiceItem',
+    'Expense',
 ]

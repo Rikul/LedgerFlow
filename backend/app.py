@@ -7,6 +7,7 @@ from routes import (
     customers_bp,
     vendors_bp,
     invoices_bp,
+    expenses_bp,
     company_bp,
     settings_bp,
 )
@@ -29,6 +30,7 @@ def create_app():
     app.register_blueprint(customers_bp)
     app.register_blueprint(vendors_bp)
     app.register_blueprint(invoices_bp)
+    app.register_blueprint(expenses_bp)
     app.register_blueprint(company_bp)
     app.register_blueprint(settings_bp)
 
