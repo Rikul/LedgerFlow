@@ -7,6 +7,7 @@ from models.security_settings import SecuritySettings
 from models.customer import Customer
 from models.vendor import Vendor
 from models.invoice import Invoice, InvoiceItem
+from models.expense import Expense
 
 __all__ = [
     'Base',
@@ -21,4 +22,5 @@ __all__ = [
     'Vendor',
     'Invoice',
     'InvoiceItem',
+    'Expense',
 ]
