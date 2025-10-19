@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import Base, SessionLocal, engine, DATABASE_URL
+from models import Base, SessionLocal, engine, DATABASE_URL, database_manager
 from routes import (
     health_bp,
     customers_bp,
@@ -22,8 +22,8 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize migrations (variable not used but needed for Flask-Migrate)
-    Migrate(app, Base)
-    Base.metadata.create_all(bind=engine)
+    Migrate(app, database_manager)
+    database_manager.create_all()
 
     # Register blueprints
     app.register_blueprint(health_bp)
