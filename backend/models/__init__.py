@@ -1,5 +1,5 @@
 """Models package - exports all models and database components."""
-from database import Base, SessionLocal, engine, DATABASE_URL
+from database import Base, SessionLocal, engine, DATABASE_URL, database_manager
 from models.company import Company
 from models.tax_settings import TaxSettings
 from models.notification_settings import NotificationSettings
@@ -14,6 +14,7 @@ __all__ = [
     'SessionLocal',
     'engine',
     'DATABASE_URL',
+    'database_manager',
     'Company',
     'TaxSettings',
     'NotificationSettings',
