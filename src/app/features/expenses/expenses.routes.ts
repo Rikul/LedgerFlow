@@ -10,6 +10,10 @@ export const expensesRoutes: Routes = [
     loadComponent: () => import('./expense-create/expense-create.component').then(m => m.ExpenseCreateComponent)
   },
   {
+    path: 'view/:id',
+    loadComponent: () => import('./expense-view/expense-view.component').then(m => m.ExpenseViewComponent)
+  },
+  {
     path: 'edit/:id',
     loadComponent: () => import('./expense-create/expense-create.component').then(m => m.ExpenseCreateComponent)
   }

@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { FormsModule } from '@angular/forms';
 import { VendorService, Vendor } from './vendor.service';
 import { VendorViewComponent } from './vendor-view.component';
+import { FileExportService } from '../../shared/services/file-export.service';
 
 @Component({
   selector: 'app-vendors',
@@ -17,15 +18,20 @@ import { VendorViewComponent } from './vendor-view.component';
           <h1 class="text-2xl font-bold text-gray-900">Vendors</h1>
           <p class="text-gray-600">Track vendor contacts, categories, and payment terms</p>
         </div>
-        <button
-          class="btn-primary  flex items-center justify-center"
-          (click)="addNewVendor()"
-          *ngIf="!showCreateForm">
-          <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Vendor
-        </button>
+        <div class="flex flex-wrap gap-3" *ngIf="!showCreateForm">
+          <button class="btn-secondary flex items-center justify-center" (click)="exportVendorsToCsv()" [disabled]="!filteredVendors.length">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+            </svg>
+            Export to CSV
+          </button>
+          <button class="btn-primary  flex items-center justify-center" (click)="addNewVendor()">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Vendor
+          </button>
+        </div>
       </div>
 
       <!-- Create/Edit Vendor Form -->
@@ -367,7 +373,7 @@ export class VendorsComponent implements OnInit {
   pageSize = 10;
   totalItems = 0;
 
-  constructor(private fb: FormBuilder, private vendorService: VendorService) {
+  constructor(private fb: FormBuilder, private vendorService: VendorService, private fileExportService: FileExportService) {
     this.vendorForm = this.fb.group({
       company: ['', Validators.required],
       contact: [''],
@@ -399,6 +405,26 @@ export class VendorsComponent implements OnInit {
       this.vendors = vendors;
       this.filterVendors();
     });
+  }
+
+  exportVendorsToCsv(): void {
+    if (!this.filteredVendors.length) {
+      return;
+    }
+
+    const headers = ['Company', 'Contact', 'Email', 'Phone', 'Category', 'Payment Terms', 'Status'];
+    const rows = this.filteredVendors.map(vendor => [
+      vendor.company,
+      vendor.contact || '',
+      vendor.email,
+      vendor.phone || '',
+      this.getCategoryLabel(vendor.category),
+      this.formatPaymentTerms(vendor.paymentTerms),
+      vendor.isActive ? 'Active' : 'Inactive',
+    ]);
+
+    const filename = `vendors-${new Date().toISOString().slice(0, 10)}.csv`;
+    this.fileExportService.exportToCsv(filename, headers, rows);
   }
 
   filterVendors(): void {
@@ -437,6 +463,15 @@ export class VendorsComponent implements OnInit {
       'other': 'Other'
     };
     return labels[category] || category;
+  }
+
+  private formatPaymentTerms(value?: string | null): string {
+    if (!value) {
+      return '';
+    }
+    return value
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase());
   }
 
   editVendor(vendor: Vendor): void {
