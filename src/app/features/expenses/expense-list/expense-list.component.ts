@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ExpenseService, Expense } from '../expense.service';
+import { FileExportService } from '../../../shared/services/file-export.service';
 
 interface ExpenseSummary {
   total: number;
@@ -22,12 +23,20 @@ interface ExpenseSummary {
           <h1 class="text-2xl font-bold text-gray-900">Expenses</h1>
           <p class="text-gray-600">Track and manage your business expenses</p>
         </div>
-        <button routerLink="/expenses/create" class="btn-primary flex items-center justify-center">
-          <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Expense
-        </button>
+        <div class="flex flex-wrap gap-3">
+          <button class="btn-secondary flex items-center justify-center" (click)="exportExpensesToCsv()" [disabled]="!filteredExpenses.length">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+            </svg>
+            Export to CSV
+          </button>
+          <button routerLink="/expenses/create" class="btn-primary flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Expense
+          </button>
+        </div>
       </div>
 
       <!-- Summary Cards -->
@@ -150,6 +159,16 @@ interface ExpenseSummary {
                   </td>
                   <td class="px-2 py-2 whitespace-nowrap">
                     <div class="flex space-x-2">
+                      <a
+                        *ngIf="expense.id"
+                        [routerLink]="['/expenses/view', expense.id]"
+                        class="text-primary-600 hover:text-primary-900"
+                        title="View">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </a>
                       <a [routerLink]="['/expenses/edit', expense.id]" class="text-primary-600 hover:text-primary-900" title="Edit">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -195,6 +214,7 @@ interface ExpenseSummary {
 })
 export class ExpenseListComponent implements OnInit {
   private expenseService = inject(ExpenseService);
+  private fileExportService = inject(FileExportService);
 
   expenses: Expense[] = [];
   filteredExpenses: Expense[] = [];
@@ -231,6 +251,26 @@ export class ExpenseListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadExpenses();
+  }
+
+  exportExpensesToCsv(): void {
+    if (!this.filteredExpenses.length) {
+      return;
+    }
+
+    const headers = ['Date', 'Payee', 'Category', 'Amount', 'Payment Method', 'Reference', 'Tax Deductible'];
+    const rows = this.filteredExpenses.map(expense => [
+      this.formatDateForExport(expense.date),
+      this.getPayeeName(expense),
+      this.getTypeLabel(expense.type),
+      (expense.amount ?? 0).toFixed(2),
+      expense.paymentMethod ?? '',
+      expense.referenceNumber ?? '',
+      expense.taxDeductible ? 'Yes' : 'No',
+    ]);
+
+    const filename = `expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+    this.fileExportService.exportToCsv(filename, headers, rows);
   }
 
   loadExpenses(): void {
@@ -383,6 +423,17 @@ export class ExpenseListComponent implements OnInit {
   getTypeLabel(type: string): string {
     const match = this.expenseTypes.find(option => option.value === type);
     return match ? match.label : type;
+  }
+
+  private formatDateForExport(value?: string | null): string {
+    if (!value) {
+      return '';
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+    return parsed.toLocaleDateString();
   }
 
   private updateSummary(): void {

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { InvoiceService, Invoice, InvoiceStatus, InvoiceLineItem } from '../invoice.service';
+import { PdfExportService } from '../../../shared/services/pdf-export.service';
 
 @Component({
   selector: 'app-invoice-view',
@@ -18,6 +19,7 @@ import { InvoiceService, Invoice, InvoiceStatus, InvoiceLineItem } from '../invo
         <div class="flex flex-wrap gap-3">
           <button routerLink="/invoices" class="btn-secondary">Back to List</button>
           <a [routerLink]="['/invoices/edit', invoice.id]" class="btn-secondary">Edit</a>
+          <button class="btn-secondary" (click)="exportInvoiceToPdf()" [disabled]="isExporting">{{ isExporting ? 'Preparing…' : 'Export to PDF' }}</button>
           <button class="btn-primary" (click)="markAsSent()" *ngIf="invoice.status === 'draft'">Mark as Sent</button>
         </div>
       </div>
@@ -143,11 +145,13 @@ import { InvoiceService, Invoice, InvoiceStatus, InvoiceLineItem } from '../invo
 export class InvoiceViewComponent implements OnInit {
   invoice: Invoice | null = null;
   error: string | null = null;
+  isExporting = false;
 
   constructor(
     private invoiceService: InvoiceService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private pdfExportService: PdfExportService
   ) {}
 
   ngOnInit(): void {
@@ -195,6 +199,19 @@ export class InvoiceViewComponent implements OnInit {
         this.error = 'Failed to update invoice status.';
       }
     });
+  }
+
+  exportInvoiceToPdf(): void {
+    if (!this.invoice) {
+      return;
+    }
+
+    this.isExporting = true;
+    try {
+      this.pdfExportService.exportInvoice(this.invoice);
+    } finally {
+      this.isExporting = false;
+    }
   }
 
   private loadInvoice(id: number): void {

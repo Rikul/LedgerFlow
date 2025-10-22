@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { FormsModule } from '@angular/forms';
 import { CustomerService, Customer } from './customer.service';
 import { CustomerViewComponent } from './customer-view.component';
+import { FileExportService } from '../../shared/services/file-export.service';
 
 @Component({
   selector: 'app-customers',
@@ -17,15 +18,20 @@ import { CustomerViewComponent } from './customer-view.component';
           <h1 class="text-2xl font-bold text-gray-900">Customers</h1>
           <p class="text-gray-600">Manage customer relationships and billing details</p>
         </div>
-        <button
-          class="btn-primary flex items-center justify-center"
-          (click)="addNewCustomer()"
-          *ngIf="!showCreateForm">
-          <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Customer
-        </button>
+        <div class="flex flex-wrap gap-3" *ngIf="!showCreateForm">
+          <button class="btn-secondary flex items-center justify-center" (click)="exportCustomersToCsv()" [disabled]="!filteredCustomers.length">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+            </svg>
+            Export to CSV
+          </button>
+          <button class="btn-primary flex items-center justify-center" (click)="addNewCustomer()">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Customer
+          </button>
+        </div>
       </div>
 
       <!-- Create/Edit Customer Form -->
@@ -316,7 +322,7 @@ export class CustomersComponent implements OnInit {
   pageSize = 10;
   totalItems = 0;
 
-  constructor(private fb: FormBuilder, private customerService: CustomerService) {
+  constructor(private fb: FormBuilder, private customerService: CustomerService, private fileExportService: FileExportService) {
     this.customerForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -354,6 +360,25 @@ export class CustomersComponent implements OnInit {
       this.customers = customers;
       this.filterCustomers();
     });
+  }
+
+  exportCustomersToCsv(): void {
+    if (!this.filteredCustomers.length) {
+      return;
+    }
+
+    const headers = ['Name', 'Email', 'Company', 'Phone', 'Payment Terms', 'Status'];
+    const rows = this.filteredCustomers.map(customer => [
+      customer.name,
+      customer.email,
+      customer.company || '',
+      customer.phone || '',
+      this.formatPaymentTerms(customer.paymentTerms),
+      customer.isActive ? 'Active' : 'Inactive',
+    ]);
+
+    const filename = `customers-${new Date().toISOString().slice(0, 10)}.csv`;
+    this.fileExportService.exportToCsv(filename, headers, rows);
   }
 
   filterCustomers(): void {
@@ -578,6 +603,15 @@ export class CustomersComponent implements OnInit {
     } catch (error) {
       console.warn('Failed to load customer sort state', error);
     }
+  }
+
+  private formatPaymentTerms(value?: string | null): string {
+    if (!value) {
+      return '';
+    }
+    return value
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase());
   }
 
   private saveSortingState(): void {
