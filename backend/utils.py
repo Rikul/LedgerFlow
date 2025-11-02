@@ -14,14 +14,8 @@ def parse_float(value, default=0.0):
 def normalize_status(value, allowed_statuses=None):
     """Normalize and validate invoice status."""
     if allowed_statuses is None:
-        allowed_statuses = {'draft', 'sent', 'paid'}
+        allowed_statuses = {'draft', 'sent', 'paid', 'overdue'}
     value = (value or 'draft').lower()
-
-    # Legacy invoices may still send the deprecated ``overdue`` status. Map it to
-    # ``sent`` so that the application stops persisting the old value.
-    if value == 'overdue':
-        value = 'sent'
-
     if value not in allowed_statuses:
         return 'draft'
     return value

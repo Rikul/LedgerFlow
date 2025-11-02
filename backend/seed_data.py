@@ -17,7 +17,7 @@ EXPENSE_TYPES = [
 
 PAYMENT_METHODS = ['cash', 'check', 'credit_card', 'debit_card', 'bank_transfer', 'paypal']
 PAYMENT_TERMS = ['net15', 'net30', 'net45', 'net60', 'due_on_receipt']
-INVOICE_STATUSES = ['draft', 'sent', 'paid']
+INVOICE_STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled']
 VENDOR_CATEGORIES = ['supplier', 'contractor', 'consultant', 'utility', 'other']
 
 # Service/product descriptions for invoice items

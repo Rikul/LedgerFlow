@@ -9,16 +9,6 @@ from utils import parse_float, normalize_status, serialize_invoice
 invoices_bp = Blueprint('invoices', __name__)
 
 
-def _replace_legacy_overdue_status(invoices):
-    """Convert legacy ``overdue`` invoice statuses to ``sent`` in-place."""
-    updated = False
-    for invoice in invoices:
-        if getattr(invoice, 'status', None) == 'overdue':
-            invoice.status = 'sent'
-            updated = True
-    return updated
-
-
 @invoices_bp.get('/api/invoices')
 def get_invoices():
     db = SessionLocal()
@@ -28,8 +18,6 @@ def get_invoices():
         .order_by(Invoice.id.desc())
         .all()
     )
-    if _replace_legacy_overdue_status(invoices):
-        db.commit()
     return jsonify([serialize_invoice(invoice) for invoice in invoices]), 200
 
 
@@ -44,8 +32,6 @@ def get_invoice(invoice_id):
     )
     if not invoice:
         return jsonify({'error': 'Invoice not found'}), 404
-    if _replace_legacy_overdue_status([invoice]):
-        db.commit()
     return jsonify(serialize_invoice(invoice)), 200
 
 
