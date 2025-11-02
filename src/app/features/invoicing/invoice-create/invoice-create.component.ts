@@ -192,7 +192,7 @@ interface TaxRateOption {
 export class InvoiceCreateComponent implements OnInit, OnDestroy {
   form: FormGroup;
   customers: Customer[] = [];
-  statusOptions: InvoiceStatus[] = ['draft', 'sent', 'paid', 'overdue'];
+  statusOptions: InvoiceStatus[] = ['draft', 'sent', 'paid'];
   taxRateOptions: TaxRateOption[] = [];
   totals: InvoiceTotals = { subtotal: 0, taxTotal: 0, discountTotal: 0, total: 0 };
   submitting = false;

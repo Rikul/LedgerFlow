@@ -37,7 +37,10 @@ import { PdfExportService } from '../../../shared/services/pdf-export.service';
             <p class="text-sm text-gray-500">Issue Date</p>
             <p class="font-medium text-gray-900">{{ invoice.issueDate | date: 'mediumDate' }}</p>
             <p class="text-sm text-gray-500 mt-2">Due Date</p>
-            <p class="font-medium text-gray-900">{{ invoice.dueDate | date: 'mediumDate' }}</p>
+            <p class="font-medium text-gray-900 flex items-center gap-2">
+              {{ invoice.dueDate | date: 'mediumDate' }}
+              <span *ngIf="isInvoiceOverdue(invoice)" class="status-badge status-overdue text-xs">Overdue</span>
+            </p>
           </div>
         </div>
       </div>
@@ -59,7 +62,11 @@ import { PdfExportService } from '../../../shared/services/pdf-export.service';
               <p class="text-lg font-medium text-gray-600 mt-1">{{ invoice.invoiceNumber }}</p>
               <div class="mt-4 text-sm">
                 <p><span class="font-medium">Issue Date:</span> {{ invoice.issueDate | date: 'mediumDate' }}</p>
-                <p><span class="font-medium">Due Date:</span> {{ invoice.dueDate | date: 'mediumDate' }}</p>
+                <p class="flex items-center gap-2">
+                  <span class="font-medium">Due Date:</span>
+                  <span>{{ invoice.dueDate | date: 'mediumDate' }}</span>
+                  <span *ngIf="isInvoiceOverdue(invoice)" class="status-badge status-overdue text-xs">Overdue</span>
+                </p>
                 <p><span class="font-medium">Payment Terms:</span> {{ invoice.paymentTerms | titlecase }}</p>
               </div>
             </div>
@@ -169,13 +176,27 @@ export class InvoiceViewComponent implements OnInit {
     switch (status) {
       case 'paid':
         return 'status-paid';
-      case 'overdue':
-        return 'status-overdue';
       case 'sent':
         return 'status-pending';
       default:
         return 'status-draft';
     }
+  }
+
+  isInvoiceOverdue(invoice: Invoice | null): boolean {
+    if (!invoice || !invoice.dueDate) {
+      return false;
+    }
+    if (invoice.status === 'paid' || invoice.status === 'draft') {
+      return false;
+    }
+    const dueDate = new Date(invoice.dueDate);
+    if (Number.isNaN(dueDate.getTime())) {
+      return false;
+    }
+    const endOfDueDate = new Date(dueDate);
+    endOfDueDate.setHours(23, 59, 59, 999);
+    return endOfDueDate.getTime() < Date.now();
   }
 
   getLineItemTotal(item: InvoiceLineItem): number {
