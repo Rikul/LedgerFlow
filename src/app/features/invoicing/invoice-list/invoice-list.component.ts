@@ -5,6 +5,16 @@ import { RouterModule } from '@angular/router';
 import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
 import { FileExportService } from '../../../shared/services/file-export.service';
 
+type StatusFilter = '' | InvoiceStatus | 'overdue';
+
+interface InvoiceStatusCounts {
+  total: number;
+  draft: number;
+  sent: number;
+  paid: number;
+  overdue: number;
+}
+
 @Component({
   selector: 'app-invoice-list',
   standalone: true,
@@ -157,7 +167,17 @@ import { FileExportService } from '../../../shared/services/file-export.service'
                     </div>
                   </td>
                   <td class="px-2 py-2 whitespace-nowrap">{{ invoice.issueDate | date: 'mediumDate' }}</td>
-                  <td class="px-2 py-2 whitespace-nowrap">{{ invoice.dueDate | date: 'mediumDate' }}</td>
+                  <td class="px-2 py-2 whitespace-nowrap">
+                    <div>
+                      <p>{{ invoice.dueDate | date: 'mediumDate' }}</p>
+                      <p
+                        *ngIf="isInvoiceOverdue(invoice)"
+                        class="text-xs font-semibold uppercase tracking-wide text-danger-600"
+                      >
+                        overdue
+                      </p>
+                    </div>
+                  </td>
                   <td class="px-2 py-2 whitespace-nowrap font-medium">{{ invoice.total | currency }}</td>
                   <td class="px-2 py-2 whitespace-nowrap">
                     <span class="status-badge" [ngClass]="getStatusBadgeClass(invoice.status)">
@@ -240,13 +260,13 @@ export class InvoiceListComponent implements OnInit {
   loading = false;
   error: string | null = null;
   searchTerm = '';
-  statusFilter = '';
+  statusFilter: StatusFilter = '';
   sortColumn = '';
   sortDirection: 'asc' | 'desc' = 'asc';
   currentPage = 1;
   pageSize = 10;
   totalItems = 0;
-  statusCounts: Record<'total' | InvoiceStatus, number> = {
+  statusCounts: InvoiceStatusCounts = {
     total: 0,
     draft: 0,
     sent: 0,
@@ -304,12 +324,16 @@ export class InvoiceListComponent implements OnInit {
     const term = this.searchTerm.trim().toLowerCase();
     const status = this.statusFilter;
     this.filteredInvoices = this.invoices.filter(invoice => {
+      const invoiceIsOverdue = this.isInvoiceOverdue(invoice);
       const matchesTerm =
         !term ||
         invoice.invoiceNumber.toLowerCase().includes(term) ||
         (invoice.customer?.name || '').toLowerCase().includes(term) ||
-        invoice.status.toLowerCase().includes(term);
-      const matchesStatus = !status || invoice.status === status;
+        invoice.status.toLowerCase().includes(term) ||
+        (invoiceIsOverdue && 'overdue'.includes(term));
+      const matchesStatus =
+        !status ||
+        (status === 'overdue' ? invoiceIsOverdue : invoice.status === status);
       return matchesTerm && matchesStatus;
     });
     this.totalItems = this.filteredInvoices.length;
@@ -491,8 +515,6 @@ export class InvoiceListComponent implements OnInit {
     switch (status) {
       case 'paid':
         return 'status-paid';
-      case 'overdue':
-        return 'status-overdue';
       case 'sent':
         return 'status-pending';
       default:
@@ -517,7 +539,7 @@ export class InvoiceListComponent implements OnInit {
   }
 
   private updateStatusCounts(): void {
-    const counts: Record<'total' | InvoiceStatus, number> = {
+    const counts: InvoiceStatusCounts = {
       total: this.totalItems,
       draft: 0,
       sent: 0,
@@ -525,8 +547,27 @@ export class InvoiceListComponent implements OnInit {
       overdue: 0,
     };
     for (const invoice of this.filteredInvoices) {
-      counts[invoice.status] = (counts[invoice.status] || 0) + 1;
+      counts[invoice.status] += 1;
+      if (this.isInvoiceOverdue(invoice)) {
+        counts.overdue += 1;
+      }
     }
     this.statusCounts = counts;
+  }
+
+  isInvoiceOverdue(invoice: Invoice): boolean {
+    if (!invoice.dueDate) {
+      return false;
+    }
+    if (invoice.status === 'paid' || invoice.status === 'draft') {
+      return false;
+    }
+    const dueDate = new Date(invoice.dueDate);
+    if (Number.isNaN(dueDate.getTime())) {
+      return false;
+    }
+    const endOfDueDate = new Date(dueDate);
+    endOfDueDate.setHours(23, 59, 59, 999);
+    return endOfDueDate.getTime() < Date.now();
   }
 }

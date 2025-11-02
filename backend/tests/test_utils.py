@@ -22,7 +22,7 @@ def test_normalize_status_valid():
     assert normalize_status('draft') == 'draft'
     assert normalize_status('SENT') == 'sent'
     assert normalize_status('Paid') == 'paid'
-    assert normalize_status('overdue') == 'overdue'
+    assert normalize_status('overdue') == 'sent'
 
 
 def test_normalize_status_invalid():
