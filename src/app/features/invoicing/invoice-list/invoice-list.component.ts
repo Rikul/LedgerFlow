@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
+import { FileExportService } from '../../../shared/services/file-export.service';
 
 @Component({
   selector: 'app-invoice-list',
@@ -16,12 +17,20 @@ import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
           <h1 class="text-2xl font-bold text-gray-900">Invoices</h1>
           <p class="text-gray-600">Manage and track your invoices</p>
         </div>
-        <button routerLink="/invoices/create" class="btn-primary flex items-center justify-center">
-          <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Create Invoice
-        </button>
+        <div class="flex flex-wrap gap-3">
+          <button class="btn-secondary flex items-center justify-center" (click)="exportInvoicesToCsv()" [disabled]="!filteredInvoices.length">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+            </svg>
+            Export to CSV
+          </button>
+          <button routerLink="/invoices/create" class="btn-primary flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Create Invoice
+          </button>
+        </div>
       </div>
 
       <!-- Filters -->
@@ -245,11 +254,30 @@ export class InvoiceListComponent implements OnInit {
     overdue: 0,
   };
 
-  constructor(private invoiceService: InvoiceService) {}
+  constructor(private invoiceService: InvoiceService, private fileExportService: FileExportService) {}
 
   ngOnInit(): void {
     this.loadSortingState();
     this.loadInvoices();
+  }
+
+  exportInvoicesToCsv(): void {
+    if (!this.filteredInvoices.length) {
+      return;
+    }
+
+    const headers = ['Invoice #', 'Customer', 'Issue Date', 'Due Date', 'Total', 'Status'];
+    const rows = this.filteredInvoices.map(invoice => [
+      invoice.invoiceNumber,
+      invoice.customer?.name || 'Unknown Customer',
+      this.formatDateForExport(invoice.issueDate),
+      this.formatDateForExport(invoice.dueDate),
+      this.formatCurrency(invoice.total),
+      invoice.status.toUpperCase(),
+    ]);
+
+    const filename = `invoices-${new Date().toISOString().slice(0, 10)}.csv`;
+    this.fileExportService.exportToCsv(filename, headers, rows);
   }
 
   loadInvoices(): void {
@@ -470,6 +498,22 @@ export class InvoiceListComponent implements OnInit {
       default:
         return 'status-draft';
     }
+  }
+
+  private formatDateForExport(value?: string | null): string {
+    if (!value) {
+      return '';
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+    return parsed.toLocaleDateString();
+  }
+
+  private formatCurrency(value?: number | null): string {
+    const amount = value ?? 0;
+    return amount.toFixed(2);
   }
 
   private updateStatusCounts(): void {
