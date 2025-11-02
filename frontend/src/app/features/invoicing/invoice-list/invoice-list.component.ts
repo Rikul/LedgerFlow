@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { InvoiceService, Invoice, InvoiceStatus } from '../invoice.service';
 import { FileExportService } from '../../../shared/services/file-export.service';
+import { PdfExportService } from '../../../shared/services/pdf-export.service';
 
 type StatusFilter = '' | InvoiceStatus | 'overdue';
 
@@ -192,6 +193,12 @@ interface InvoiceStatusCounts {
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </a>
+                      <button class="text-gray-600 hover:text-gray-900" (click)="printInvoice(invoice)" title="Print">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V4h12v5M6 18h12v-5H6v5zm-2 0h16a2 2 0 002-2v-5a2 2 0 00-2-2H4a2 2 0 00-2 2v5a2 2 0 002 2z" />
+                        </svg>
+
+                      </button>
                       <a [routerLink]="['/invoices/edit', invoice.id]" class="text-gray-600 hover:text-gray-900" title="Edit">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -274,7 +281,7 @@ export class InvoiceListComponent implements OnInit {
     overdue: 0,
   };
 
-  constructor(private invoiceService: InvoiceService, private fileExportService: FileExportService) {}
+  constructor(private invoiceService: InvoiceService, private fileExportService: FileExportService, private pdfExportService: PdfExportService) {}
 
   ngOnInit(): void {
     this.loadSortingState();
@@ -505,6 +512,10 @@ export class InvoiceListComponent implements OnInit {
         this.error = 'Failed to delete invoice. Please try again.';
       }
     });
+  }
+
+  printInvoice(invoice: Invoice): void {
+    this.pdfExportService.exportInvoice(invoice);
   }
 
   trackByInvoice(_: number, invoice: Invoice): number | undefined {
