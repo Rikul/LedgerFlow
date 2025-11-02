@@ -1,4 +1,4 @@
-# LedgerFlow - Accounting Software
+# LedgerFlow 
 
 ## Features
 
