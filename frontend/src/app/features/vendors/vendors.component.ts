@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { FormsModule } from '@angular/forms';
 import { VendorService, Vendor } from './vendor.service';
 import { VendorViewComponent } from './vendor-view.component';
-import { FileExportService } from '../../shared/services/file-export.service';
+import { PdfExportService } from '../../shared/services/pdf-export.service';
 
 @Component({
   selector: 'app-vendors',
@@ -19,11 +19,11 @@ import { FileExportService } from '../../shared/services/file-export.service';
           <p class="text-gray-600">Track vendor contacts, categories, and payment terms</p>
         </div>
         <div class="flex flex-wrap gap-3" *ngIf="!showCreateForm">
-          <button class="btn-secondary flex items-center justify-center" (click)="exportVendorsToCsv()" [disabled]="!filteredVendors.length">
+          <button class="btn-secondary flex items-center justify-center" (click)="exportVendorsToPdf()" [disabled]="!filteredVendors.length">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
             </svg>
-            Export to CSV
+            Export to PDF
           </button>
           <button class="btn-primary  flex items-center justify-center" (click)="addNewVendor()">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -373,7 +373,7 @@ export class VendorsComponent implements OnInit {
   pageSize = 10;
   totalItems = 0;
 
-  constructor(private fb: FormBuilder, private vendorService: VendorService, private fileExportService: FileExportService) {
+  constructor(private fb: FormBuilder, private vendorService: VendorService, private pdfExportService: PdfExportService) {
     this.vendorForm = this.fb.group({
       company: ['', Validators.required],
       contact: [''],
@@ -407,14 +407,14 @@ export class VendorsComponent implements OnInit {
     });
   }
 
-  exportVendorsToCsv(): void {
+  exportVendorsToPdf(): void {
     if (!this.filteredVendors.length) {
       return;
     }
 
     const headers = ['Company', 'Contact', 'Email', 'Phone', 'Category', 'Payment Terms', 'Status'];
     const rows = this.filteredVendors.map(vendor => [
-      vendor.company,
+      vendor.company || vendor.contact,
       vendor.contact || '',
       vendor.email,
       vendor.phone || '',
@@ -423,8 +423,14 @@ export class VendorsComponent implements OnInit {
       vendor.isActive ? 'Active' : 'Inactive',
     ]);
 
-    const filename = `vendors-${new Date().toISOString().slice(0, 10)}.csv`;
-    this.fileExportService.exportToCsv(filename, headers, rows);
+    const filename = `vendors-${new Date().toISOString().slice(0, 10)}`;
+    this.pdfExportService.exportDirectory(
+      filename,
+      'Vendor Directory',
+      headers,
+      rows,
+      { subtitle: 'Current vendor list', emptyMessage: 'No vendors available.' }
+    );
   }
 
   filterVendors(): void {

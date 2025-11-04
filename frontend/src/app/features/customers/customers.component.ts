@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { FormsModule } from '@angular/forms';
 import { CustomerService, Customer } from './customer.service';
 import { CustomerViewComponent } from './customer-view.component';
-import { FileExportService } from '../../shared/services/file-export.service';
+import { PdfExportService } from '../../shared/services/pdf-export.service';
 
 @Component({
   selector: 'app-customers',
@@ -19,11 +19,11 @@ import { FileExportService } from '../../shared/services/file-export.service';
           <p class="text-gray-600">Manage customer relationships and billing details</p>
         </div>
         <div class="flex flex-wrap gap-3" *ngIf="!showCreateForm">
-          <button class="btn-secondary flex items-center justify-center" (click)="exportCustomersToCsv()" [disabled]="!filteredCustomers.length">
+          <button class="btn-secondary flex items-center justify-center" (click)="exportCustomersToPdf()" [disabled]="!filteredCustomers.length">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
             </svg>
-            Export to CSV
+            Export to PDF
           </button>
           <button class="btn-primary flex items-center justify-center" (click)="addNewCustomer()">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,7 +322,7 @@ export class CustomersComponent implements OnInit {
   pageSize = 10;
   totalItems = 0;
 
-  constructor(private fb: FormBuilder, private customerService: CustomerService, private fileExportService: FileExportService) {
+  constructor(private fb: FormBuilder, private customerService: CustomerService, private pdfExportService: PdfExportService) {
     this.customerForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -362,7 +362,7 @@ export class CustomersComponent implements OnInit {
     });
   }
 
-  exportCustomersToCsv(): void {
+  exportCustomersToPdf(): void {
     if (!this.filteredCustomers.length) {
       return;
     }
@@ -377,8 +377,14 @@ export class CustomersComponent implements OnInit {
       customer.isActive ? 'Active' : 'Inactive',
     ]);
 
-    const filename = `customers-${new Date().toISOString().slice(0, 10)}.csv`;
-    this.fileExportService.exportToCsv(filename, headers, rows);
+    const filename = `customers-${new Date().toISOString().slice(0, 10)}`;
+    this.pdfExportService.exportDirectory(
+      filename,
+      'Customer Directory',
+      headers,
+      rows,
+      { subtitle: 'Current customer list', emptyMessage: 'No customers available.' }
+    );
   }
 
   filterCustomers(): void {

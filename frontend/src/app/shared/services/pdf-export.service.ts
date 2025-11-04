@@ -4,6 +4,55 @@ import { Expense } from '../../features/expenses/expense.service';
 
 @Injectable({ providedIn: 'root' })
 export class PdfExportService {
+  exportDirectory(
+    filename: string,
+    title: string,
+    headers: string[],
+    rows: (string | number | boolean | Date | null | undefined)[][],
+    options: { subtitle?: string; generatedAt?: Date; emptyMessage?: string } = {}
+  ): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const generatedAt = options.generatedAt ?? new Date();
+    const tableRowsHtml = rows.length
+      ? rows
+          .map(row => `
+            <tr>
+              ${row
+                .map(cell => `<td>${this.escapeHtml(this.formatDirectoryCell(cell))}</td>`)
+                .join('')}
+            </tr>
+          `)
+          .join('')
+      : `<tr><td class="empty" colspan="${headers.length}">${this.escapeHtml(options.emptyMessage || 'No records to export.')}</td></tr>`;
+
+    const html = `
+      <div class="document">
+        <div class="document-header">
+          <h1>${this.escapeHtml(title)}</h1>
+          <p class="generated-date">Generated ${this.escapeHtml(generatedAt.toLocaleString())}</p>
+          ${options.subtitle ? `<p class="subtitle">${this.escapeHtml(options.subtitle)}</p>` : ''}
+        </div>
+        <div class="section">
+          <table class="data-table">
+            <thead>
+              <tr>
+                ${headers.map(header => `<th>${this.escapeHtml(header)}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    this.printHtml(filename, html);
+  }
+
   exportInvoice(invoice: Invoice): void {
     if (typeof window === 'undefined') {
       return;
@@ -189,6 +238,10 @@ export class PdfExportService {
         h1 { font-size: 24px; margin-bottom: 16px; }
         h2 { margin: 0; }
         .document { max-width: 720px; margin: 0 auto; }
+        .document-header { margin-bottom: 24px; }
+        .document-header h1 { margin-bottom: 4px; }
+        .generated-date { color: #6b7280; font-size: 12px; margin-bottom: 4px; }
+        .subtitle { color: #4b5563; font-size: 13px; margin: 0; }
         .section { margin-bottom: 16px; }
         .section-title { font-size: 16px; margin-bottom: 8px; color: #1f2937; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
@@ -197,6 +250,9 @@ export class PdfExportService {
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
         th { background-color: #f3f4f6; font-weight: 600; }
+        .data-table th { background-color: #111827; color: #ffffff; }
+        .data-table tbody tr:nth-child(even) td { background-color: #f9fafb; }
+        .data-table .empty { text-align: center; color: #6b7280; font-style: italic; }
         .align-right { text-align: right; }
         .totals table { max-width: 320px; margin-left: auto; }
         .totals th { text-align: left; background-color: transparent; }
@@ -258,5 +314,23 @@ export class PdfExportService {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  private formatDirectoryCell(value: string | number | boolean | Date | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+
+    if (value instanceof Date) {
+      const date = value;
+      return Number.isNaN(date.getTime()) ? date.toString() : date.toLocaleDateString();
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+
+    const stringValue = String(value).trim();
+    return stringValue.length ? stringValue : '—';
   }
 }
