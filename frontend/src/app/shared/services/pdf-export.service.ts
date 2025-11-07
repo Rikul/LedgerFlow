@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Invoice } from '../../features/invoicing/invoice.service';
 import { Expense } from '../../features/expenses/expense.service';
+import { Customer } from '../../features/customers/customer.service';
+import { Vendor } from '../../features/vendors/vendor.service';
 
 @Injectable({ providedIn: 'root' })
 export class PdfExportService {
@@ -143,6 +145,191 @@ export class PdfExportService {
     `;
 
     this.printHtml(`expense-${expense.id ?? 'details'}`, html);
+  }
+
+  exportCustomer(customer: Customer): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const addressHtml = this.formatAddressHtml(customer.address);
+    const billingAddressHtml = customer.billingAddress
+      ? this.formatAddressHtml(customer.billingAddress)
+      : '';
+
+    const html = `
+      <div class="document">
+        <h1>Customer Information</h1>
+        <div class="grid section">
+          <div>
+            <p class="label">Customer Name</p>
+            <p class="value">${this.escapeHtml(customer.name)}</p>
+          </div>
+          <div>
+            <p class="label">Email</p>
+            <p class="value">${this.escapeHtml(customer.email)}</p>
+          </div>
+          ${customer.company ? `
+          <div>
+            <p class="label">Company</p>
+            <p class="value">${this.escapeHtml(customer.company)}</p>
+          </div>
+          ` : ''}
+          ${customer.phone ? `
+          <div>
+            <p class="label">Phone</p>
+            <p class="value">${this.escapeHtml(customer.phone)}</p>
+          </div>
+          ` : ''}
+        </div>
+
+        ${addressHtml ? `
+        <div class="section">
+          <h2 class="section-title">Address</h2>
+          ${addressHtml}
+        </div>
+        ` : ''}
+
+        ${billingAddressHtml ? `
+        <div class="section">
+          <h2 class="section-title">Billing Address</h2>
+          ${billingAddressHtml}
+        </div>
+        ` : ''}
+
+        <div class="grid section">
+          ${customer.taxId ? `
+          <div>
+            <p class="label">Tax ID</p>
+            <p class="value">${this.escapeHtml(customer.taxId)}</p>
+          </div>
+          ` : ''}
+          ${customer.paymentTerms ? `
+          <div>
+            <p class="label">Payment Terms</p>
+            <p class="value">${this.escapeHtml(this.formatCategory(customer.paymentTerms))}</p>
+          </div>
+          ` : ''}
+          ${customer.creditLimit ? `
+          <div>
+            <p class="label">Credit Limit</p>
+            <p class="value">${this.formatCurrency(customer.creditLimit)}</p>
+          </div>
+          ` : ''}
+          <div>
+            <p class="label">Status</p>
+            <p class="value">${customer.isActive ? 'Active' : 'Inactive'}</p>
+          </div>
+        </div>
+
+        ${customer.notes ? `
+        <div class="section">
+          <h2 class="section-title">Notes</h2>
+          <p class="multiline">${this.escapeHtml(customer.notes)}</p>
+        </div>
+        ` : ''}
+      </div>
+    `;
+
+    this.printHtml(`customer-${customer.name.replace(/\s+/g, '-').toLowerCase()}`, html);
+  }
+
+  exportVendor(vendor: Vendor): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const addressHtml = this.formatAddressHtml(vendor.address);
+
+    const html = `
+      <div class="document">
+        <h1>Vendor Information</h1>
+        <div class="grid section">
+          ${vendor.company ? `
+          <div>
+            <p class="label">Company</p>
+            <p class="value">${this.escapeHtml(vendor.company)}</p>
+          </div>
+          ` : ''}
+          ${vendor.contact ? `
+          <div>
+            <p class="label">Contact Person</p>
+            <p class="value">${this.escapeHtml(vendor.contact)}</p>
+          </div>
+          ` : ''}
+          <div>
+            <p class="label">Email</p>
+            <p class="value">${this.escapeHtml(vendor.email)}</p>
+          </div>
+          ${vendor.phone ? `
+          <div>
+            <p class="label">Phone</p>
+            <p class="value">${this.escapeHtml(vendor.phone)}</p>
+          </div>
+          ` : ''}
+        </div>
+
+        ${addressHtml ? `
+        <div class="section">
+          <h2 class="section-title">Address</h2>
+          ${addressHtml}
+        </div>
+        ` : ''}
+
+        <div class="grid section">
+          ${vendor.taxId ? `
+          <div>
+            <p class="label">Tax ID</p>
+            <p class="value">${this.escapeHtml(vendor.taxId)}</p>
+          </div>
+          ` : ''}
+          ${vendor.paymentTerms ? `
+          <div>
+            <p class="label">Payment Terms</p>
+            <p class="value">${this.escapeHtml(this.formatCategory(vendor.paymentTerms))}</p>
+          </div>
+          ` : ''}
+          ${vendor.category ? `
+          <div>
+            <p class="label">Category</p>
+            <p class="value">${this.escapeHtml(this.formatCategory(vendor.category))}</p>
+          </div>
+          ` : ''}
+          ${vendor.accountNumber ? `
+          <div>
+            <p class="label">Account Number</p>
+            <p class="value">${this.escapeHtml(vendor.accountNumber)}</p>
+          </div>
+          ` : ''}
+          <div>
+            <p class="label">Status</p>
+            <p class="value">${vendor.isActive ? 'Active' : 'Inactive'}</p>
+          </div>
+        </div>
+
+        ${vendor.notes ? `
+        <div class="section">
+          <h2 class="section-title">Notes</h2>
+          <p class="multiline">${this.escapeHtml(vendor.notes)}</p>
+        </div>
+        ` : ''}
+      </div>
+    `;
+
+    const vendorName = vendor.company || vendor.contact || 'vendor';
+    this.printHtml(`vendor-${vendorName.replace(/\s+/g, '-').toLowerCase()}`, html);
+  }
+
+  private formatAddressHtml(address: { street?: string; city?: string; state?: string; zipCode?: string; country?: string } | undefined): string {
+    if (!address) {
+      return '';
+    }
+    const { street, city, state, zipCode, country } = address;
+    const parts = [street, city, state, zipCode, country].filter(Boolean);
+    if (parts.length === 0) {
+      return '';
+    }
+    return `<p class="value">${this.escapeHtml(parts.join(', '))}</p>`;
   }
 
   private printHtml(filename: string, bodyHtml: string): void {
