@@ -21,6 +21,9 @@ tmp
 htmlcov
 .coverage
 *.egg-info
+uv.lock
+backend/main.py
+.python-version
 
 # coding agent files
 GEMINI.md
