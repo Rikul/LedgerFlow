@@ -33,7 +33,16 @@ import { RouterModule } from '@angular/router';
           </svg>
           Expenses
         </a>
-        
+
+        <!-- Payments -->
+        <a routerLink="/payments" routerLinkActive="active" class="sidebar-link">
+          <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M7 12H5m12.364 6.364l-1.414-1.414M8.05 7.05L6.636 5.636m10.728 0L15.95 7.05M8.05 16.95l-1.414 1.414" />
+          </svg>
+          Payments
+        </a>
+
         <!-- Customers -->
         <a routerLink="/customers" routerLinkActive="active" class="sidebar-link">
           <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

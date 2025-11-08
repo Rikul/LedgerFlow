@@ -3,7 +3,7 @@ import random
 from datetime import datetime, timedelta
 from faker import Faker
 from database import SessionLocal, engine, Base
-from models import Customer, Vendor, Invoice, InvoiceItem, Expense
+from models import Customer, Vendor, Invoice, InvoiceItem, Expense, Payment
 
 # Initialize Faker
 fake = Faker()
@@ -216,6 +216,45 @@ def create_expenses(session, vendors, customers, count=100):
     return expenses
 
 
+def create_payments(session, invoices, vendors, customers, count=80):
+    """Create fake payment records linked to invoices, vendors, and customers."""
+    print(f"Creating {count} payments...")
+    payments = []
+
+    for _ in range(count):
+        payment_date = fake.date_between(start_date='-1y', end_date='today')
+        amount = round(random.uniform(25, 15000), 2)
+
+        invoice = random.choice(invoices) if invoices else None
+        vendor = random.choice(vendors) if vendors and random.random() < 0.6 else None
+        customer = None
+
+        if invoice and random.random() < 0.7:
+            customer = next((c for c in customers if c.id == invoice.customer_id), None)
+        elif customers and random.random() < 0.5:
+            customer = random.choice(customers)
+
+        payment = Payment(
+            amount=amount,
+            date=payment_date.isoformat(),
+            payment_method=random.choice(PAYMENT_METHODS),
+            reference_number=fake.bothify(text='PMT-########') if random.random() > 0.4 else None,
+            notes=fake.sentence() if random.random() > 0.7 else None,
+            status=random.choice(['pending', 'completed', 'reconciled']),
+            invoice_id=invoice.id if invoice else None,
+            vendor_id=vendor.id if vendor else None,
+            customer_id=customer.id if customer else None,
+            created_at=payment_date.isoformat(),
+            updated_at=datetime.now().isoformat(),
+        )
+        payments.append(payment)
+
+    session.add_all(payments)
+    session.commit()
+    print(f"Created {count} payments")
+    return payments
+
+
 def main():
     """Main seeding function."""
     print("Starting data seeding...")
@@ -233,6 +272,7 @@ def main():
         vendors = create_vendors(session, count=20)
         invoices = create_invoices(session, customers, count=50)
         expenses = create_expenses(session, vendors, customers, count=100)
+        payments = create_payments(session, invoices, vendors, customers, count=80)
 
         print("=" * 50)
         print("Data seeding completed successfully!")
@@ -241,6 +281,7 @@ def main():
         print(f"  - Vendors: {len(vendors)}")
         print(f"  - Invoices: {len(invoices)}")
         print(f"  - Expenses: {len(expenses)}")
+        print(f"  - Payments: {len(payments)}")
 
     except Exception as e:
         print(f"Error during seeding: {e}")
