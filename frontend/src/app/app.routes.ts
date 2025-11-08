@@ -23,6 +23,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/expenses/expenses.routes').then(m => m.expensesRoutes)
   },
   {
+    path: 'payments',
+    canActivate: [authGuard],
+    loadChildren: () => import('./features/payments/payments.routes').then(m => m.paymentsRoutes)
+  },
+  {
     path: 'customers',
     canActivate: [authGuard],
     loadComponent: () => import('./features/customers/customers.component').then(m => m.CustomersComponent)

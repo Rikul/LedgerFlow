@@ -8,6 +8,7 @@ from models.customer import Customer
 from models.vendor import Vendor
 from models.invoice import Invoice, InvoiceItem
 from models.expense import Expense
+from models.payment import Payment
 
 __all__ = [
     'Base',
@@ -24,4 +25,5 @@ __all__ = [
     'Invoice',
     'InvoiceItem',
     'Expense',
+    'Payment',
 ]
