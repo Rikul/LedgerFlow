@@ -13,12 +13,12 @@ import { FileExportService } from '../../shared/services/file-export.service';
   imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, CustomerViewComponent],
   template: `
     <div class="space-y-6 p-6">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-4 space-y-3 md:space-y-0">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-4 space-y-3 md:space-y-0" *ngIf="!showCreateForm && !viewingCustomer">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Customers</h1>
           <p class="text-gray-600">Manage customer relationships and billing details</p>
         </div>
-        <div class="flex flex-wrap gap-3" *ngIf="!showCreateForm">
+        <div class="flex flex-wrap gap-3">
           <button class="btn-secondary flex items-center justify-center" (click)="exportCustomersToCsv()" [disabled]="!filteredCustomers.length">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
