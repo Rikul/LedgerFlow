@@ -16,7 +16,6 @@ class Payment(Base):
     payment_method = Column(String(50), nullable=True)
     reference_number = Column(String(100), nullable=True)
     notes = Column(String(500), nullable=True)
-    status = Column(String(50), nullable=True)
     invoice_id = Column(Integer, ForeignKey('invoices.id'), nullable=True)
     vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=True)
     customer_id = Column(Integer, ForeignKey('customers.id'), nullable=True)
