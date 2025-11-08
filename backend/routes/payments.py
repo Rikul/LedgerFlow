@@ -72,32 +72,53 @@ def _serialize_payment(payment: Payment) -> Dict[str, Any]:
     }
 
 
-def _apply_payload(payment: Payment, data: Dict[str, Any]) -> None:
-    """Apply payload data to a payment instance."""
-    payment.amount = float(data.get('amount') or 0)
-    payment.date = (data.get('date') or '').strip()
-    payment.payment_method = (data.get('paymentMethod') or '').strip() or None
-    payment.reference_number = (data.get('referenceNumber') or '').strip() or None
-    payment.notes = (data.get('notes') or '').strip() or None
-    payment.status = (data.get('status') or '').strip() or None
+def _parse_payload(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize payload data for validation and persistence."""
+    payload: Dict[str, Any] = {}
+
+    try:
+        payload['amount'] = float(data.get('amount') or 0)
+    except (TypeError, ValueError):
+        payload['amount'] = 0.0
+
+    payload['date'] = (data.get('date') or '').strip()
+    payload['payment_method'] = (data.get('paymentMethod') or '').strip() or None
+    payload['reference_number'] = (data.get('referenceNumber') or '').strip() or None
+    payload['notes'] = (data.get('notes') or '').strip() or None
+    payload['status'] = (data.get('status') or '').strip() or None
 
     invoice_id = data.get('invoiceId')
     try:
-        payment.invoice_id = int(invoice_id) if invoice_id not in (None, '', 'null') else None
+        payload['invoice_id'] = int(invoice_id) if invoice_id not in (None, '', 'null') else None
     except (TypeError, ValueError):
-        payment.invoice_id = None
+        payload['invoice_id'] = None
 
     vendor_id = data.get('vendorId')
     try:
-        payment.vendor_id = int(vendor_id) if vendor_id not in (None, '', 'null') else None
+        payload['vendor_id'] = int(vendor_id) if vendor_id not in (None, '', 'null') else None
     except (TypeError, ValueError):
-        payment.vendor_id = None
+        payload['vendor_id'] = None
 
     customer_id = data.get('customerId')
     try:
-        payment.customer_id = int(customer_id) if customer_id not in (None, '', 'null') else None
+        payload['customer_id'] = int(customer_id) if customer_id not in (None, '', 'null') else None
     except (TypeError, ValueError):
-        payment.customer_id = None
+        payload['customer_id'] = None
+
+    return payload
+
+
+def _apply_payload(payment: Payment, payload: Dict[str, Any]) -> None:
+    """Apply normalized payload data to a payment instance."""
+    payment.amount = payload['amount']
+    payment.date = payload['date']
+    payment.payment_method = payload['payment_method']
+    payment.reference_number = payload['reference_number']
+    payment.notes = payload['notes']
+    payment.status = payload['status']
+    payment.invoice_id = payload['invoice_id']
+    payment.vendor_id = payload['vendor_id']
+    payment.customer_id = payload['customer_id']
 
 
 @payments_bp.get('/api/payments')
@@ -127,45 +148,48 @@ def create_payment():
     db = SessionLocal()
     data = request.get_json(force=True) or {}
 
+    payload = _parse_payload(data)
+
     if data.get('amount') in (None, '') or not data.get('date'):
         return jsonify({'error': 'Amount and date are required'}), 400
 
     payment = Payment()
-    _apply_payload(payment, data)
 
-    if payment.amount <= 0:
+    if payload['amount'] <= 0:
         return jsonify({'error': 'Amount must be greater than zero'}), 400
-    if not payment.date:
+    if not payload['date']:
         return jsonify({'error': 'Payment date is required'}), 400
 
-    if payment.invoice_id:
-        invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).first()
+    invoice = None
+    if payload['invoice_id']:
+        invoice = db.query(Invoice).filter(Invoice.id == payload['invoice_id']).first()
         if not invoice:
             return jsonify({'error': 'Invoice not found'}), 400
-        payment.invoice = invoice
 
-    if payment.vendor_id:
-        vendor = db.query(Vendor).filter(Vendor.id == payment.vendor_id).first()
+    vendor = None
+    if payload['vendor_id']:
+        vendor = db.query(Vendor).filter(Vendor.id == payload['vendor_id']).first()
         if not vendor:
             return jsonify({'error': 'Vendor not found'}), 400
-        payment.vendor = vendor
-    else:
-        payment.vendor = None
 
-    if payment.customer_id:
-        customer = db.query(Customer).filter(Customer.id == payment.customer_id).first()
+    customer = None
+    if payload['customer_id']:
+        customer = db.query(Customer).filter(Customer.id == payload['customer_id']).first()
         if not customer:
             return jsonify({'error': 'Customer not found'}), 400
-        payment.customer = customer
-    else:
-        payment.customer = None
+
+    if not payload['status']:
+        payload['status'] = 'completed'
+
+    _apply_payload(payment, payload)
+
+    payment.invoice = invoice
+    payment.vendor = vendor
+    payment.customer = customer
 
     now = datetime.datetime.utcnow().isoformat()
     payment.created_at = now
     payment.updated_at = now
-
-    if not payment.status:
-        payment.status = 'completed'
 
     db.add(payment)
     db.commit()
@@ -182,39 +206,42 @@ def update_payment(payment_id: int):
         return jsonify({'error': 'Payment not found'}), 404
 
     data = request.get_json(force=True) or {}
-    _apply_payload(payment, data)
+    payload = _parse_payload(data)
 
-    if payment.amount <= 0:
+    if payload['amount'] <= 0:
         return jsonify({'error': 'Amount must be greater than zero'}), 400
-    if not payment.date:
+    if not payload['date']:
         return jsonify({'error': 'Payment date is required'}), 400
 
-    if payment.invoice_id:
-        invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).first()
+    invoice = None
+    if payload['invoice_id']:
+        invoice = db.query(Invoice).filter(Invoice.id == payload['invoice_id']).first()
         if not invoice:
+            db.rollback()
             return jsonify({'error': 'Invoice not found'}), 400
-        payment.invoice = invoice
-    else:
-        payment.invoice = None
 
-    if payment.vendor_id:
-        vendor = db.query(Vendor).filter(Vendor.id == payment.vendor_id).first()
+    vendor = None
+    if payload['vendor_id']:
+        vendor = db.query(Vendor).filter(Vendor.id == payload['vendor_id']).first()
         if not vendor:
+            db.rollback()
             return jsonify({'error': 'Vendor not found'}), 400
-        payment.vendor = vendor
-    else:
-        payment.vendor = None
 
-    if payment.customer_id:
-        customer = db.query(Customer).filter(Customer.id == payment.customer_id).first()
+    customer = None
+    if payload['customer_id']:
+        customer = db.query(Customer).filter(Customer.id == payload['customer_id']).first()
         if not customer:
+            db.rollback()
             return jsonify({'error': 'Customer not found'}), 400
-        payment.customer = customer
-    else:
-        payment.customer = None
 
-    if not payment.status:
-        payment.status = 'completed'
+    if not payload['status']:
+        payload['status'] = 'completed'
+
+    _apply_payload(payment, payload)
+
+    payment.invoice = invoice
+    payment.vendor = vendor
+    payment.customer = customer
 
     payment.updated_at = datetime.datetime.utcnow().isoformat()
 
