@@ -1,0 +1,19 @@
+services:
+  # Frontend (Angular)
+  frontend:
+    build: ./frontend
+    ports:
+      # Exposes the app on http://localhost:80
+      - "8000:80"
+    depends_on:
+      - backend # Waits for backend to be "ready" (optional but good practice)
+
+  # Backend (Flask)
+  backend:
+    build: ./backend
+    ports:
+      # Exposes the API on http://localhost:5000
+      - "5000:5000"
+    # If your app needs environment variables (e.g., database URL)
+    # environment:
+    #   - DATABASE_URL=your-db-connection-string

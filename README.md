@@ -41,6 +41,16 @@
 
 > **Note**: Backend must be running for the app to function properly.
 
+### Docker Compose (Alternative)
+
+Run the entire stack with Docker:
+
+```bash
+docker-compose up
+```
+
+Access the app at `http://localhost:8000`
+
 ### Build for Production
 
 ```bash
