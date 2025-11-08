@@ -25,7 +25,6 @@ export interface Payment {
   paymentMethod?: string | null;
   referenceNumber?: string | null;
   notes?: string | null;
-  status?: string | null;
   invoiceId?: number | null;
   vendorId?: number | null;
   customerId?: number | null;

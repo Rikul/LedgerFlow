@@ -60,7 +60,6 @@ def _serialize_payment(payment: Payment) -> Dict[str, Any]:
         'paymentMethod': payment.payment_method,
         'referenceNumber': payment.reference_number,
         'notes': payment.notes,
-        'status': payment.status,
         'invoiceId': payment.invoice_id,
         'vendorId': payment.vendor_id,
         'customerId': payment.customer_id,
@@ -79,7 +78,6 @@ def _apply_payload(payment: Payment, data: Dict[str, Any]) -> None:
     payment.payment_method = (data.get('paymentMethod') or '').strip() or None
     payment.reference_number = (data.get('referenceNumber') or '').strip() or None
     payment.notes = (data.get('notes') or '').strip() or None
-    payment.status = (data.get('status') or '').strip() or None
 
     invoice_id = data.get('invoiceId')
     try:
@@ -164,9 +162,6 @@ def create_payment():
     payment.created_at = now
     payment.updated_at = now
 
-    if not payment.status:
-        payment.status = 'completed'
-
     db.add(payment)
     db.commit()
     db.refresh(payment)
@@ -212,9 +207,6 @@ def update_payment(payment_id: int):
         payment.customer = customer
     else:
         payment.customer = None
-
-    if not payment.status:
-        payment.status = 'completed'
 
     payment.updated_at = datetime.datetime.utcnow().isoformat()
 

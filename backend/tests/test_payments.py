@@ -60,7 +60,6 @@ def test_create_payment_minimal(client):
     data = json.loads(response.data)
     assert data['amount'] == 250.75
     assert data['date'] == '2024-03-10'
-    assert data['status'] == 'completed'
     assert data['vendor'] is None
     assert data['customer'] is None
     assert data['invoice'] is None
@@ -77,7 +76,6 @@ def test_create_payment_with_associations(client):
         'date': '2024-03-12',
         'paymentMethod': 'bank_transfer',
         'referenceNumber': 'PAY-500',
-        'status': 'pending',
         'invoiceId': invoice['id'],
         'customerId': customer['id'],
         'vendorId': vendor['id'],
@@ -91,7 +89,6 @@ def test_create_payment_with_associations(client):
     assert data['customer']['id'] == customer['id']
     assert data['vendor']['id'] == vendor['id']
     assert data['paymentMethod'] == 'bank_transfer'
-    assert data['status'] == 'pending'
 
 
 def test_update_and_delete_payment(client):
@@ -111,7 +108,6 @@ def test_update_and_delete_payment(client):
         'amount': 150.0,
         'date': '2024-03-06',
         'paymentMethod': 'credit_card',
-        'status': 'reconciled',
         'notes': 'Updated payment details',
     }
     update_response = client.put(
@@ -123,7 +119,6 @@ def test_update_and_delete_payment(client):
     updated = json.loads(update_response.data)
     assert updated['amount'] == 150.0
     assert updated['paymentMethod'] == 'credit_card'
-    assert updated['status'] == 'reconciled'
     assert updated['notes'] == 'Updated payment details'
 
     # Delete payment

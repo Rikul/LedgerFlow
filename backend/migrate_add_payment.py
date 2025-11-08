@@ -35,7 +35,6 @@ def create_payments_table():
                 payment_method TEXT,
                 reference_number TEXT,
                 notes TEXT,
-                status TEXT,
                 invoice_id INTEGER,
                 vendor_id INTEGER,
                 customer_id INTEGER,

@@ -31,6 +31,12 @@ interface PaymentSummary {
             </svg>
             Export to CSV
           </button>
+          <a routerLink="/payments/create" class="btn-primary flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+            </svg>
+            Record Payment
+          </a>
         </div>
       </div>
 
@@ -54,13 +60,14 @@ interface PaymentSummary {
         </div>
       </div>
 
-      <!-- Error Message -->
+      <!-- Error Messages -->
       <div *ngIf="error" class="alert-danger">{{ error }}</div>
+      <div *ngIf="deleteError" class="alert-warning">{{ deleteError }}</div>
 
       <!-- Filters -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="p-4">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
               <div class="relative">
@@ -80,13 +87,6 @@ interface PaymentSummary {
               <select class="input-field" [(ngModel)]="methodFilter" (change)="applyFilters()">
                 <option value="">All Methods</option>
                 <option *ngFor="let option of paymentMethods" [value]="option.value">{{ option.label }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select class="input-field" [(ngModel)]="statusFilter" (change)="applyFilters()">
-                <option value="">All Statuses</option>
-                <option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</option>
               </select>
             </div>
             <div class="flex items-end">
@@ -123,15 +123,8 @@ interface PaymentSummary {
                     </div>
                   </th>
                   <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900">Method</th>
-                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" (click)="sort('status')">
-                    <div class="flex items-center">
-                      Status
-                      <svg *ngIf="sortColumn === 'status'" class="ml-1 w-4 h-4" [class.rotate-180]="sortDirection === 'desc'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                      </svg>
-                    </div>
-                  </th>
                   <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900">Reference</th>
+                  <th scope="col" class="px-2 py-2 text-left text-sm font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
@@ -153,12 +146,40 @@ interface PaymentSummary {
                   </td>
                   <td class="px-2 py-2 whitespace-nowrap font-medium">{{ payment.amount | currency }}</td>
                   <td class="px-2 py-2 whitespace-nowrap text-gray-700">{{ formatMethod(payment.paymentMethod) }}</td>
-                  <td class="px-2 py-2 whitespace-nowrap">
-                    <span class="status-badge" [ngClass]="getStatusClass(payment.status)">
-                      {{ formatStatus(payment.status) }}
-                    </span>
-                  </td>
                   <td class="px-2 py-2 whitespace-nowrap text-gray-700">{{ payment.referenceNumber || '—' }}</td>
+                  <td class="px-2 py-2 whitespace-nowrap">
+                    <div class="flex space-x-2">
+                      <a
+                        *ngIf="payment.id"
+                        [routerLink]="['/payments/view', payment.id]"
+                        class="text-primary-600 hover:text-primary-900"
+                        title="View">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </a>
+                      <a
+                        *ngIf="payment.id"
+                        [routerLink]="['/payments/edit', payment.id]"
+                        class="text-primary-600 hover:text-primary-900"
+                        title="Edit">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </a>
+                      <button
+                        type="button"
+                        class="text-danger-600 hover:text-danger-900 disabled:opacity-50"
+                        [disabled]="deleteInProgressId === payment.id"
+                        (click)="deletePayment(payment)"
+                        title="Delete">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -199,6 +220,7 @@ export class PaymentListComponent implements OnInit {
   paginatedPayments: Payment[] = [];
   loading = false;
   error: string | null = null;
+  deleteError: string | null = null;
 
   summary: PaymentSummary = {
     totalAmount: 0,
@@ -209,9 +231,8 @@ export class PaymentListComponent implements OnInit {
 
   searchTerm = '';
   methodFilter = '';
-  statusFilter = '';
 
-  sortColumn: 'date' | 'amount' | 'status' = 'date';
+  sortColumn: 'date' | 'amount' = 'date';
   sortDirection: 'asc' | 'desc' = 'desc';
 
   currentPage = 1;
@@ -231,12 +252,7 @@ export class PaymentListComponent implements OnInit {
     { value: 'other', label: 'Other' },
   ];
 
-  statusOptions = [
-    { value: 'completed', label: 'Completed' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'reconciled', label: 'Reconciled' },
-    { value: 'failed', label: 'Failed' },
-  ];
+  deleteInProgressId: number | null = null;
 
   ngOnInit(): void {
     this.loadPayments();
@@ -247,14 +263,13 @@ export class PaymentListComponent implements OnInit {
       return;
     }
 
-    const headers = ['Date', 'Party', 'Invoice', 'Amount', 'Method', 'Status', 'Reference'];
+    const headers = ['Date', 'Party', 'Invoice', 'Amount', 'Method', 'Reference'];
     const rows = this.filteredPayments.map(payment => [
       this.formatDateForExport(payment.date),
       this.getPartyName(payment),
       this.getInvoiceLabel(payment) || '',
       (payment.amount ?? 0).toFixed(2),
       this.formatMethod(payment.paymentMethod, true),
-      this.formatStatus(payment.status, true),
       payment.referenceNumber ?? '',
     ]);
 
@@ -282,8 +297,7 @@ export class PaymentListComponent implements OnInit {
     const term = this.searchTerm.trim().toLowerCase();
     this.filteredPayments = this.payments.filter(payment => {
       const matchesMethod = !this.methodFilter || (payment.paymentMethod || '') === this.methodFilter;
-      const matchesStatus = !this.statusFilter || (payment.status || 'completed') === this.statusFilter;
-      if (!matchesMethod || !matchesStatus) {
+      if (!matchesMethod) {
         return false;
       }
       if (!term) {
@@ -295,8 +309,8 @@ export class PaymentListComponent implements OnInit {
         payment.invoice?.invoiceNumber || '',
         payment.referenceNumber || '',
         payment.notes || '',
-        payment.status || '',
         payment.paymentMethod || '',
+        payment.invoice?.status || '',
       ]
         .filter(Boolean)
         .join(' ')
@@ -309,7 +323,7 @@ export class PaymentListComponent implements OnInit {
     this.updatePagination();
   }
 
-  sort(column: 'date' | 'amount' | 'status'): void {
+  sort(column: 'date' | 'amount'): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -325,9 +339,6 @@ export class PaymentListComponent implements OnInit {
     this.filteredPayments = [...this.filteredPayments].sort((a, b) => {
       if (this.sortColumn === 'amount') {
         return ((a.amount || 0) - (b.amount || 0)) * direction;
-      }
-      if (this.sortColumn === 'status') {
-        return (a.status || '').localeCompare(b.status || '') * direction;
       }
       const dateA = new Date(a.date).getTime();
       const dateB = new Date(b.date).getTime();
@@ -374,7 +385,6 @@ export class PaymentListComponent implements OnInit {
   resetFilters(): void {
     this.searchTerm = '';
     this.methodFilter = '';
-    this.statusFilter = '';
     this.applyFilters();
   }
 
@@ -401,19 +411,8 @@ export class PaymentListComponent implements OnInit {
     if (!invoiceNumber) {
       return '';
     }
-    const status = payment.invoice?.status ? this.formatStatus(payment.invoice.status, true) : '';
+    const status = payment.invoice?.status ? this.prettify(payment.invoice.status) : '';
     return status ? `${invoiceNumber} (${status})` : invoiceNumber;
-  }
-
-  getStatusClass(status: string | null | undefined): string {
-    const normalized = (status || 'completed').toLowerCase();
-    if (normalized === 'pending') {
-      return 'status-pending';
-    }
-    if (normalized === 'failed') {
-      return 'status-overdue';
-    }
-    return 'status-paid';
   }
 
   formatMethod(method?: string | null, raw = false): string {
@@ -423,8 +422,29 @@ export class PaymentListComponent implements OnInit {
     return this.prettify(method);
   }
 
-  formatStatus(status?: string | null, _raw = false): string {
-    return this.prettify(status || 'completed');
+  deletePayment(payment: Payment): void {
+    if (!payment.id || this.deleteInProgressId === payment.id) {
+      return;
+    }
+    const confirmed = typeof window === 'undefined' ? true : window.confirm('Are you sure you want to delete this payment?');
+    if (!confirmed) {
+      return;
+    }
+    this.deleteInProgressId = payment.id;
+    this.deleteError = null;
+
+    this.paymentService.deletePayment(payment.id).subscribe({
+      next: () => {
+        this.payments = this.payments.filter(item => item.id !== payment.id);
+        this.deleteInProgressId = null;
+        this.updateSummary();
+        this.applyFilters();
+      },
+      error: () => {
+        this.deleteInProgressId = null;
+        this.deleteError = 'Failed to delete payment. Please try again later.';
+      }
+    });
   }
 
   private formatDateForExport(value?: string | null): string {

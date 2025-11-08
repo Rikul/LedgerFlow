@@ -240,7 +240,6 @@ def create_payments(session, invoices, vendors, customers, count=80):
             payment_method=random.choice(PAYMENT_METHODS),
             reference_number=fake.bothify(text='PMT-########') if random.random() > 0.4 else None,
             notes=fake.sentence() if random.random() > 0.7 else None,
-            status=random.choice(['pending', 'completed', 'reconciled']),
             invoice_id=invoice.id if invoice else None,
             vendor_id=vendor.id if vendor else None,
             customer_id=customer.id if customer else None,
