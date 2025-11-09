@@ -11,6 +11,7 @@ from routes import (
     payments_bp,
     company_bp,
     settings_bp,
+    dashboard_bp,
 )
 
 
@@ -35,6 +36,7 @@ def create_app():
     app.register_blueprint(payments_bp)
     app.register_blueprint(company_bp)
     app.register_blueprint(settings_bp)
+    app.register_blueprint(dashboard_bp)
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):

@@ -7,6 +7,7 @@ from routes.expenses import expenses_bp
 from routes.payments import payments_bp
 from routes.company import company_bp
 from routes.settings import settings_bp
+from routes.dashboard import dashboard_bp
 
 __all__ = [
     'health_bp',
@@ -17,4 +18,5 @@ __all__ = [
     'payments_bp',
     'company_bp',
     'settings_bp',
+    'dashboard_bp',
 ]
