@@ -180,26 +180,26 @@ interface DashboardData {
         <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button class="btn-primary flex items-center justify-center space-x-2">
+            <a routerLink="/invoices/new" class="btn-primary flex items-center justify-center space-x-2">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               <span>Create Invoice</span>
-            </button>
+            </a>
 
-            <button class="btn-secondary flex items-center justify-center space-x-2">
+            <a routerLink="/expenses/new" class="btn-secondary flex items-center justify-center space-x-2">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               <span>Add Expense</span>
-            </button>
+            </a>
 
-            <button class="btn-secondary flex items-center justify-center space-x-2">
+            <a routerLink="/reports" class="btn-secondary flex items-center justify-center space-x-2">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
               <span>View Reports</span>
-            </button>
+            </a>
           </div>
         </div>
       </div>
