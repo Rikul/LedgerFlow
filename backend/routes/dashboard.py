@@ -119,15 +119,13 @@ def get_dashboard_data():
             for month in trend_months
         ]
 
-        recent_invoices = sorted(
-            invoices,
-            key=lambda invoice: (
-                parse_iso_date(invoice.issue_date)
-                or parse_iso_date(invoice.created_at)
-                or date.min
-            ),
-            reverse=True,
-        )[:5]
+        recent_invoices = (
+            db.query(Invoice)
+            .options(joinedload(Invoice.customer))
+            .order_by(Invoice.created_at.desc())
+            .limit(5)
+            .all()
+        )
 
         recent_invoices_data = []
         for invoice in recent_invoices:
