@@ -255,11 +255,16 @@ export class DashboardComponent implements OnInit {
     return `${sign}${absolute}%`;
   }
 
-  getChangeClasses(change: number | null | undefined): string {
+  getChangeClasses(change: number | null | undefined, isExpense: boolean = false): string {
     if (change === null || change === undefined || Number.isNaN(change)) {
       return 'text-gray-500';
     }
-    return change >= 0 ? 'text-success-600' : 'text-danger-600';
+    const isPositive = change >= 0;
+    // Invert colors for expenses: increase (positive) is bad, decrease (negative) is good
+    if (isExpense) {
+      return isPositive ? 'text-danger-600' : 'text-success-600';
+    }
+    return isPositive ? 'text-success-600' : 'text-danger-600';
   }
 
   getStatusBadgeClass(status: string | null | undefined): string {
