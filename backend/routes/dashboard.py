@@ -12,7 +12,20 @@ dashboard_bp = Blueprint('dashboard', __name__)
 
 
 def parse_iso_date(value):
-    """Parse supported date strings to ``date`` objects."""
+    """Parse supported date strings to ``date`` objects.
+
+    Handles date, datetime, and string inputs. Supported string formats:
+    - ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)
+    - "%Y-%m-%d"
+    - "%Y-%m-%dT%H:%M:%S"
+    - "%Y-%m-%d %H:%M:%S"
+
+    Args:
+        value: A date, datetime, or date string to parse.
+
+    Returns:
+        date: Parsed date object, or None if parsing fails.
+    """
     if not value:
         return None
 
