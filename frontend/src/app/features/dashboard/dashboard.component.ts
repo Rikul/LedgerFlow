@@ -234,7 +234,8 @@ export class DashboardComponent implements OnInit {
         this.dashboardData = data;
         this.loading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Failed to load dashboard data:', err);
         this.loadError = true;
         this.loading = false;
       }
