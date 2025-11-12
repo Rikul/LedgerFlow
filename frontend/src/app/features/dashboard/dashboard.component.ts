@@ -176,7 +176,7 @@ interface DashboardData {
           </div>
         </div>
 
-        <!-- Quick Actions -->
+        <!-- Quick Actions 
         <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -200,8 +200,11 @@ interface DashboardData {
               </svg>
               <span>View Reports</span>
             </a>
+
           </div>
-        </div>
+        </div>-->
+
+
       </div>
     </ng-container>
 

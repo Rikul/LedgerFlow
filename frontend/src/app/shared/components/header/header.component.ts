@@ -20,7 +20,8 @@ import { CommonModule } from '@angular/common';
           
           <!-- Navigation and User Menu -->
           <div class="flex items-center space-x-4">
-            <!-- Search Bar -->
+
+            <!-- Search Bar 
             <div class="hidden md:block">
               <div class="relative">
                 <input
@@ -34,15 +35,17 @@ import { CommonModule } from '@angular/common';
                   </svg>
                 </div>
               </div>
-            </div>
+            </div> -->
             
-            <!-- Notifications -->
+            <!-- Notifications 
             <button class="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg">
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5l-5-5h5zm0 0V3" />
               </svg>
               <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
             </button>
+            -->
+
             
             <!-- Logout -->
             <button (click)="logout()" class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg" title="Logout">
