@@ -142,7 +142,9 @@ export class SetupComponent {
     try {
       await this.securityService.initialSetup(newPassword, company);
       this.passwordIsSet = true;
-      this.router.navigate(['/dashboard']);
+      setTimeout(() => {
+        this.router.navigate(['/dashboard']);
+      }, 1500); // Show success message for 1.5 seconds
     } catch (err) {
       console.error(err);
       // Try to extract a specific error message if available
