@@ -144,7 +144,13 @@ export class SetupComponent {
       this.passwordIsSet = true;
       this.router.navigate(['/dashboard']);
     } catch (err) {
-      this.errorMessage = 'Failed to set password or save company information';
+      console.error(err);
+      // Try to extract a specific error message if available
+      if (err && (err.message || (err.error && err.error.message))) {
+        this.errorMessage = err.message || err.error.message;
+      } else {
+        this.errorMessage = 'Failed to set password or save company information';
+      }
     } finally {
       this.saving = false;
     }
