@@ -148,8 +148,10 @@ export class SetupComponent {
     } catch (err) {
       console.error(err);
       // Try to extract a specific error message if available
-      if (err && (err.message || (err.error && err.error.message))) {
-        this.errorMessage = err.message || err.error.message;
+      if (err instanceof Error) {
+        this.errorMessage = err.message;
+      } else if (err && typeof err === 'object' && 'error' in err && (err as any).error?.message) {
+        this.errorMessage = (err as any).error.message;
       } else {
         this.errorMessage = 'Failed to set password or save company information';
       }
