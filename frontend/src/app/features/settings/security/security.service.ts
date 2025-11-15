@@ -94,6 +94,11 @@ export class SecurityService {
     return result;
   }
 
+  async initialSetup(password: string, company: any): Promise<any> {
+    const result = await this.http.post<any>(`/api/setup`, { password, company }).toPromise();
+    return result;
+  }
+
   logout() {
     localStorage.removeItem('jwtToken');
   }

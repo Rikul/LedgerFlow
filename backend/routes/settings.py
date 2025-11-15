@@ -3,7 +3,7 @@ import datetime
 import jwt
 import bcrypt
 from flask import Blueprint, jsonify, request
-from models import SessionLocal, TaxSettings, NotificationSettings, SecuritySettings
+from models import SessionLocal, TaxSettings, NotificationSettings, SecuritySettings, Company
 
 settings_bp = Blueprint('settings', __name__)
 
@@ -223,3 +223,47 @@ def verify_token():
         return jsonify({ 'valid': False, 'error': 'Token expired' }), 401
     except jwt.InvalidTokenError:
         return jsonify({ 'valid': False, 'error': 'Invalid token' }), 401
+
+
+@settings_bp.post('/api/setup')
+def initial_setup():
+    db = SessionLocal()
+    data = request.get_json(force=True) or {}
+    password = data.get('password', '')
+    company_data = data.get('company', {})
+    company_name = company_data.get('name', '')
+
+    if not password or not company_name:
+        return jsonify({ 'error': 'Password and company name are required' }), 400
+
+    # Set password
+    settings = db.query(SecuritySettings).first()
+    if not settings:
+        settings = SecuritySettings()
+        db.add(settings)
+    if settings.password_hash:
+        return jsonify({ 'error': 'Password already set' }), 400
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    settings.password_hash = hashed_password.decode('utf-8')
+
+    # Create company
+    company = db.query(Company).first()
+    if not company:
+        company = Company()
+        db.add(company)
+
+    company.name = company_name
+    company.contact_email = company_data.get('contactEmail')
+    company.company_phone = company_data.get('companyPhone')
+
+    mailing = company_data.get('mailing', {})
+    company.mailing_address1 = mailing.get('address1')
+    company.mailing_address2 = mailing.get('address2')
+    company.mailing_city = mailing.get('city')
+    company.mailing_state = mailing.get('state')
+    company.mailing_postal_code = mailing.get('postalCode')
+    company.mailing_country = mailing.get('country')
+
+    db.commit()
+    return jsonify({ 'status': 'ok' }), 200
