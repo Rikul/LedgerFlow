@@ -95,7 +95,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const routerSub = this.router.events.subscribe((event: any) => {
       if (event instanceof NavigationEnd) {
         const url = event.urlAfterRedirects || event.url;
-        this.showLayout = !(url.startsWith('/login') || url.startsWith('/setup-password'));
+        this.showLayout = !(url.startsWith('/login') || url.startsWith('/setup'));
       }
     });
     this.subscriptions.push(routerSub);

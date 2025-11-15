@@ -63,8 +63,8 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
   },
   {
-    path: 'setup-password',
-    loadComponent: () => import('./features/auth/password-setup.component').then(m => m.PasswordSetupComponent)
+    path: 'setup',
+    loadComponent: () => import('./features/auth/setup.component').then(m => m.SetupComponent)
   },
   {
     path: '**',
