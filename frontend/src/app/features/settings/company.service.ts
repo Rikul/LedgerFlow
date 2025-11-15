@@ -8,7 +8,10 @@ export interface Company {
   contactEmail: string;
   companyPhone: string;
   mailing: Address;
-  physical: Address;
+  /**
+   * Optional. Not set during initial setup; may be set later.
+   */
+  physical?: Address;
 }
 
 export interface Address {
