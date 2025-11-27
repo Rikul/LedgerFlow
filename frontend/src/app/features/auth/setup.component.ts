@@ -142,9 +142,19 @@ export class SetupComponent {
     try {
       await this.securityService.initialSetup(newPassword, company);
       this.passwordIsSet = true;
-      this.router.navigate(['/dashboard']);
+      setTimeout(() => {
+        this.router.navigate(['/dashboard']);
+      }, 1500); // Show success message for 1.5 seconds
     } catch (err) {
-      this.errorMessage = 'Failed to set password or save company information';
+      console.error(err);
+      // Try to extract a specific error message if available
+      if (err instanceof Error) {
+        this.errorMessage = err.message;
+      } else if (err && typeof err === 'object' && 'error' in err && (err as any).error?.message) {
+        this.errorMessage = (err as any).error.message;
+      } else {
+        this.errorMessage = 'Failed to set password or save company information';
+      }
     } finally {
       this.saving = false;
     }

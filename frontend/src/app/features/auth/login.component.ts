@@ -51,7 +51,7 @@ export class LoginComponent {
   async checkPasswordExists() {
     const settings: any = await this.securityService.getSecuritySettings().toPromise();
     if (!settings || typeof settings.hasPassword === 'undefined' || !settings.hasPassword) {
-      this.router.navigate(['/setup-password']);
+      this.router.navigate(['/setup']);
     }
   }
 
