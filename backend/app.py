@@ -15,13 +15,17 @@ from routes import (
 )
 
 
-def create_app():
+import os
+from config import config
+
+def create_app(config_name=None):
     """Create and configure the Flask application."""
+    if config_name is None:
+        config_name = os.environ.get('FLASK_CONFIG', 'default')
+
     app = Flask(__name__)
+    app.config.from_object(config[config_name])
     CORS(app)
-    
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize migrations (variable not used but needed for Flask-Migrate)
     Migrate(app, database_manager)
@@ -49,4 +53,4 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=app.config['PORT'], debug=app.config['DEBUG'])
