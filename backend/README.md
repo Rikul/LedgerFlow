@@ -118,6 +118,20 @@ See `tests/README.md` for detailed test documentation.
 - `PUT /api/invoices/<id>` - Update an invoice
 - `DELETE /api/invoices/<id>` - Delete an invoice
 
+### Expenses
+- `GET /api/expenses` - List all expenses
+- `GET /api/expenses/<id>` - Get expense details
+- `POST /api/expenses` - Create an expense
+- `PUT /api/expenses/<id>` - Update an expense
+- `DELETE /api/expenses/<id>` - Delete an expense
+
+### Payments
+- `GET /api/payments` - List all payments
+- `GET /api/payments/<id>` - Get payment details
+- `POST /api/payments` - Create a payment
+- `PUT /api/payments/<id>` - Update a payment
+- `DELETE /api/payments/<id>` - Delete a payment
+
 ### Company
 - `GET /api/company` - Get company information
 - `POST /api/company` - Upsert company information
