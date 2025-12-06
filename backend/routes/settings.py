@@ -2,13 +2,15 @@
 import datetime
 import jwt
 import bcrypt
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from models import SessionLocal, TaxSettings, NotificationSettings, SecuritySettings, Company
 
 settings_bp = Blueprint('settings', __name__)
 
-# Secret key for JWT (should be moved to config in production)
-SECRET_KEY = 'PPkGPmyTkmBY18J65ZYU_RQHhd-8N18ITFOiqth7Jqg'
+
+def get_jwt_secret():
+    """Get JWT secret key from app config."""
+    return current_app.config.get('JWT_SECRET_KEY')
 
 
 # Tax Settings Routes
@@ -158,6 +160,8 @@ def change_password():
     new_password = data.get('newPassword', '')
     if not current_password or not new_password:
         return jsonify({ 'error': 'Current password and new password are required' }), 400
+    if len(new_password) < 8:
+        return jsonify({ 'error': 'Password must be at least 8 characters long' }), 400
     settings = db.query(SecuritySettings).first()
     if not settings:
         settings = SecuritySettings()
@@ -166,8 +170,8 @@ def change_password():
     if settings.password_hash:
         if not bcrypt.checkpw(current_password.encode('utf-8'), settings.password_hash.encode('utf-8')):
             return jsonify({ 'error': 'Current password is incorrect' }), 400
-    # Hash new password
-    salt = bcrypt.gensalt()
+    # Hash new password with higher work factor
+    salt = bcrypt.gensalt(rounds=12)
     hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), salt)
     settings.password_hash = hashed_password.decode('utf-8')
     db.commit()
@@ -186,9 +190,9 @@ def login():
         return jsonify({ 'error': 'Invalid password' }), 401
     payload = {
         'user': 'admin',
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Reduced from 8 to 1 hour
     }
-    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    token = jwt.encode(payload, get_jwt_secret(), algorithm='HS256')
     return jsonify({ 'token': token }), 200
 
 
@@ -199,13 +203,15 @@ def set_initial_password():
     password = data.get('password', '')
     if not password:
         return jsonify({ 'error': 'Password required' }), 400
+    if len(password) < 8:
+        return jsonify({ 'error': 'Password must be at least 8 characters long' }), 400
     settings = db.query(SecuritySettings).first()
     if not settings:
         settings = SecuritySettings()
         db.add(settings)
     if settings.password_hash:
         return jsonify({ 'error': 'Password already set' }), 400
-    salt = bcrypt.gensalt()
+    salt = bcrypt.gensalt(rounds=12)
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     settings.password_hash = hashed_password.decode('utf-8')
     db.commit()
@@ -217,7 +223,7 @@ def verify_token():
     data = request.get_json(force=True) or {}
     token = data.get('token', '')
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        payload = jwt.decode(token, get_jwt_secret(), algorithms=['HS256'])
         return jsonify({ 'valid': True, 'user': payload.get('user') }), 200
     except jwt.ExpiredSignatureError:
         return jsonify({ 'valid': False, 'error': 'Token expired' }), 401
@@ -236,6 +242,9 @@ def initial_setup():
 
         if not password or not company_name:
             return jsonify({ 'error': 'Password and company name are required' }), 400
+        
+        if len(password) < 8:
+            return jsonify({ 'error': 'Password must be at least 8 characters long' }), 400
 
         # Set password
         settings = db.query(SecuritySettings).first()
@@ -244,7 +253,7 @@ def initial_setup():
             db.add(settings)
         if settings.password_hash:
             return jsonify({ 'error': 'Password already set' }), 400
-        salt = bcrypt.gensalt()
+        salt = bcrypt.gensalt(rounds=12)
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
         settings.password_hash = hashed_password.decode('utf-8')
 

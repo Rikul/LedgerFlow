@@ -25,7 +25,18 @@ def create_app(config_name=None):
 
     app = Flask(__name__)
     app.config.from_object(config[config_name])
-    CORS(app)
+    
+    # Configure CORS with specific origins for security
+    allowed_origins = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:4200,http://localhost:8000').split(',')
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": allowed_origins,
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "expose_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
+    })
 
     # Initialize migrations (variable not used but needed for Flask-Migrate)
     Migrate(app, database_manager)
@@ -46,6 +57,18 @@ def create_app(config_name=None):
     def shutdown_session(exception=None):
         """Clean up database session after each request."""
         SessionLocal.remove()
+    
+    @app.after_request
+    def set_security_headers(response):
+        """Add security headers to all responses."""
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        # Note: CSP is restrictive. Adjust based on your frontend requirements.
+        # Remove 'unsafe-inline' and 'unsafe-eval' for better security when possible.
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'"
+        return response
 
     return app
 

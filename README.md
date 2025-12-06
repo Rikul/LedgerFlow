@@ -1,5 +1,7 @@
 # LedgerFlow 
 
+> **⚠️ SECURITY NOTICE**: Before deploying to production, review the security configuration in `backend/.env.example` and the `CODE_REVIEW_REPORT.md` file.
+
 ## Features
 
 - **Dashboard** - Business overview with key metrics
@@ -22,13 +24,21 @@
 
 ### Installation
 
-1. **Install dependencies**:
+1. **Configure environment**:
+   ```bash
+   # Backend configuration
+   cd backend
+   cp .env.example .env
+   # Edit .env and set secure SECRET_KEY and JWT_SECRET_KEY
+   ```
+
+2. **Install dependencies**:
    ```bash
    npm install
    pip install -r backend/requirements.txt
    ```
 
-2. **Start servers**:
+3. **Start servers**:
    ```bash
    # Backend (required)
    cd backend && python app.py
@@ -37,7 +47,7 @@
    npm start
    ```
 
-3. **Open browser**: `http://localhost:4200`
+4. **Open browser**: `http://localhost:4200`
 
 > **Note**: Backend must be running for the app to function properly.
 
@@ -56,6 +66,25 @@ Access the app at `http://localhost:8000`
 ```bash
 ng build --configuration production
 ```
+
+## Security
+
+**Important**: Review the `CODE_REVIEW_REPORT.md` file for a complete security assessment.
+
+### Production Checklist
+
+Before deploying to production:
+
+1. ✅ Set secure `SECRET_KEY` and `JWT_SECRET_KEY` in environment variables
+2. ✅ Configure `ALLOWED_ORIGINS` for CORS
+3. ✅ Use HTTPS/TLS encryption
+4. ✅ Set `FLASK_CONFIG=production`
+5. ✅ Use a production database (PostgreSQL recommended)
+6. ✅ Review and implement authentication on all API endpoints
+7. ✅ Enable security headers (already configured in app.py)
+8. ✅ Implement rate limiting
+9. ✅ Set up monitoring and logging
+10. ✅ Review and test all security measures
 
 ## Contributing
 
