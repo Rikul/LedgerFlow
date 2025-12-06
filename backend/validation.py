@@ -1,6 +1,16 @@
-"""Input validation and sanitization utilities."""
+"""Input validation and sanitization utilities.
+
+IMPORTANT: This module provides basic validation and sanitization.
+For production use, consider these specialized libraries:
+- bleach: HTML sanitization and XSS prevention
+- email-validator: Comprehensive email validation
+- python-phonenumbers: International phone number validation
+- wtforms or pydantic: Form and data validation
+
+Install with: pip install bleach email-validator phonenumbers
+"""
 import re
-from typing import Any, Optional
+from typing import Any, Optional, List, Tuple
 
 
 def sanitize_string(value: Any, max_length: Optional[int] = None, allow_empty: bool = True) -> Optional[str]:
@@ -35,6 +45,9 @@ def sanitize_string(value: Any, max_length: Optional[int] = None, allow_empty: b
 def validate_email(email: str) -> bool:
     """
     Validate email address format.
+    
+    Note: This is a basic validation. For production use, consider
+    using a dedicated library like 'email-validator' for comprehensive validation.
     
     Args:
         email: Email address to validate
@@ -77,6 +90,9 @@ def sanitize_html(text: str) -> str:
     """
     Remove HTML tags and potentially dangerous content from text.
     
+    Note: This is a basic implementation. For production use, consider
+    using a dedicated library like 'bleach' for comprehensive XSS protection.
+    
     Args:
         text: Input text to sanitize
     
@@ -96,7 +112,7 @@ def sanitize_html(text: str) -> str:
     return text
 
 
-def validate_positive_float(value: Any, field_name: str = "Value") -> tuple[bool, Optional[str], Optional[float]]:
+def validate_positive_float(value: Any, field_name: str = "Value") -> Tuple[bool, Optional[str], Optional[float]]:
     """
     Validate that a value is a positive float.
     
@@ -116,7 +132,7 @@ def validate_positive_float(value: Any, field_name: str = "Value") -> tuple[bool
         return False, f"{field_name} must be a valid number", None
 
 
-def validate_required_fields(data: dict, required_fields: list[str]) -> tuple[bool, Optional[str]]:
+def validate_required_fields(data: dict, required_fields: List[str]) -> Tuple[bool, Optional[str]]:
     """
     Validate that required fields are present and non-empty in data.
     
@@ -140,7 +156,7 @@ def validate_required_fields(data: dict, required_fields: list[str]) -> tuple[bo
 
 
 def validate_string_length(value: str, min_length: int = 0, max_length: Optional[int] = None, 
-                          field_name: str = "Field") -> tuple[bool, Optional[str]]:
+                          field_name: str = "Field") -> Tuple[bool, Optional[str]]:
     """
     Validate string length constraints.
     

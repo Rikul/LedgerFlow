@@ -1,7 +1,10 @@
 """Authentication and authorization utilities."""
 from functools import wraps
 import jwt
+import logging
 from flask import request, jsonify, current_app
+
+logger = logging.getLogger(__name__)
 
 
 def get_jwt_secret():
@@ -38,10 +41,14 @@ def require_auth(f):
             return f(*args, **kwargs)
             
         except jwt.ExpiredSignatureError:
+            logger.warning("Expired JWT token attempted")
             return jsonify({'error': 'Token has expired'}), 401
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError as e:
+            logger.warning(f"Invalid JWT token attempted: {type(e).__name__}")
             return jsonify({'error': 'Invalid token'}), 401
         except Exception as e:
+            # Log the actual error for debugging but return generic message
+            logger.error(f"Authentication error: {type(e).__name__}: {str(e)}")
             return jsonify({'error': 'Authentication failed'}), 401
     
     return decorated_function

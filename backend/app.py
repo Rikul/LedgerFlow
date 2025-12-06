@@ -65,6 +65,8 @@ def create_app(config_name=None):
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        # Note: CSP is restrictive. Adjust based on your frontend requirements.
+        # Remove 'unsafe-inline' and 'unsafe-eval' for better security when possible.
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'"
         return response
 
